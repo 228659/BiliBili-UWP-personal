@@ -472,7 +472,7 @@ namespace BiliBili_UWP.Components.Controls
                             else if (VideoMTC.IsCompactOverlay)
                                 VideoMTC.IsCompactOverlay = false;
                         }
-                        int id = 0;
+                        long id = 0;
                         if (isBangumi)
                             id = _bangumiPart.id;
                         else

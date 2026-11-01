@@ -23,5 +23,12 @@ namespace BiliBili_Lib.Models.Others
             length = leng;
             data = id.ToString();
         }
+        public RepostLocation(int loc, int leng, long id)
+        {
+            type = 1;
+            location = loc;
+            length = leng;
+            data = id.ToString();
+        }
     }
 }

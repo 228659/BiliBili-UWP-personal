@@ -233,7 +233,7 @@ namespace BiliBili_UWP.Components.Controls
             if (data.item.orig_type != 4101)
                 App.AppViewModel.NavigateToSubPage(typeof(Pages_Share.Sub.Account.DetailPage), data.origin_user.info.uid);
             else
-                App.AppViewModel.PlayBangumi(data.origin_user.info.uid);
+                App.AppViewModel.PlayBangumi((int)data.origin_user.info.uid);
         }
         private void MainDisplay_ImageTapped(object sender, EventArgs e)
         {
