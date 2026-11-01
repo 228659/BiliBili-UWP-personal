@@ -63,10 +63,10 @@ namespace BiliBili_UWP
             {
                 return;
             }
-            App.AppViewModel.CheckAppUpdate();
             var popup = new WaitingPopup("正在初始化");
             popup.ShowPopup();
             bool isCanRequest = await App.BiliViewModel._client.ValidateRequestAsync();
+            App.WriteStartupLog($"平板模式网络校验结果: {isCanRequest}");
             if (isCanRequest)
             {
                 try
@@ -83,8 +83,9 @@ namespace BiliBili_UWP
                         NavigateToPage(AppMenuItemType.Recommend);
                     }
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
+                    App.WriteStartupLog("平板模式主页初始化失败: " + ex);
                     var rootFrame = Window.Current.Content as Frame;
                     rootFrame.Navigate(typeof(Pages.Main.NetworkErrorPage));
                 }

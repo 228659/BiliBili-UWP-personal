@@ -18,6 +18,7 @@ using Windows.ApplicationModel.Activation;
 using Windows.ApplicationModel.Background;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.Storage;
 using Windows.UI.Notifications;
 using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
@@ -45,6 +46,17 @@ namespace BiliBili_UWP
         public static ILogger _logger = LogManagerFactory.CreateLogManager().GetLogger("应用程序");
         public static Stopwatch _watch = new Stopwatch();
         public static bool _isTabletMode;
+        public static async void WriteStartupLog(string message)
+        {
+            try
+            {
+                var file = await ApplicationData.Current.LocalFolder.CreateFileAsync("startup.log", CreationCollisionOption.OpenIfExists);
+                await FileIO.AppendTextAsync(file, $"{DateTime.Now:HH:mm:ss.fff} {message}{Environment.NewLine}");
+            }
+            catch
+            {
+            }
+        }
         public App()
         {
             this.InitializeComponent();
@@ -101,13 +113,16 @@ namespace BiliBili_UWP
         {
             try
             {
+                WriteStartupLog("启动开始");
                 Frame rootFrame = Window.Current.Content as Frame;
 
                 // Do not repeat app initialization when the Window already has content,
                 // just ensure that the window is active
                 if (rootFrame == null)
                 {
+                    WriteStartupLog("SYEngine 初始化");
                     SYEngine.Core.Initialize();
+                    WriteStartupLog("SYEngine 初始化完成");
                     // Create a Frame to act as the navigation context and navigate to the first page
                     rootFrame = new Frame();
 
@@ -117,6 +132,7 @@ namespace BiliBili_UWP
                     Window.Current.Content = rootFrame;
                 }
 
+                WriteStartupLog("注册后台任务");
                 BackgroundTaskHelper.Register("ToastBackgroundTask", new ToastNotificationActionTrigger());
                 if (e is LaunchActivatedEventArgs && (e as LaunchActivatedEventArgs).PrelaunchActivated == false)
                 {
@@ -177,8 +193,10 @@ namespace BiliBili_UWP
                         AppViewModel.AppInitByActivated(arg);
                     }
                 }
+                WriteStartupLog("激活窗口");
                 Window.Current.Activate();
                 UIHelper.SetTitleBarColor();
+                WriteStartupLog("窗口已激活");
                 bool isDisableScale = AppTool.GetBoolSetting(Settings.DisableXboxScale);
                 if (SystemInformation.DeviceFamily == "Windows.Xbox")
                 {
@@ -190,6 +208,7 @@ namespace BiliBili_UWP
             }
             catch (Exception ex)
             {
+                WriteStartupLog("启动出错: " + ex);
                 _logger.Error("启动出错", ex);
             }
         }

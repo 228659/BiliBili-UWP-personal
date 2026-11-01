@@ -47,7 +47,6 @@ namespace BiliBili_UWP.Models.Core
         public WebPopup _webPopup;
         public DocumentPopup _documentPopup;
         public ReplyDetailPopup _replyDetailPopup;
-        public UpdatePopup _updatePopup;
         public DynamicDetailPopup _dynamicDetailPopup;
         public RepostPopup _repostPopup;
         public WebView _documentWebView;
@@ -108,20 +107,6 @@ namespace BiliBili_UWP.Models.Core
                     break;
                 default:
                     break;
-            }
-        }
-        public async void CheckAppUpdate()
-        {
-            string localVersion = AppTool.GetLocalSetting(Settings.LocalVersion, "");
-            string nowVersion = string.Format("{0}.{1}.{2}.{3}", Package.Current.Id.Version.Major, Package.Current.Id.Version.Minor, Package.Current.Id.Version.Build, Package.Current.Id.Version.Revision);
-            if (localVersion != nowVersion)
-            {
-                var updateFile = await StorageFile.GetFileFromApplicationUriAsync(new Uri($"ms-appx:///Others/Update.txt"));
-                string updateInfo = await FileIO.ReadTextAsync(updateFile);
-                if (_updatePopup == null)
-                    _updatePopup = new UpdatePopup(updateInfo);
-                _updatePopup.ShowPopup();
-                AppTool.WriteLocalSetting(Settings.LocalVersion, nowVersion);
             }
         }
         /// <summary>

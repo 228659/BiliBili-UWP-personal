@@ -46,15 +46,16 @@ namespace BiliBili_UWP
             }
             bool isSideOpen = AppTool.GetBoolSetting(BiliBili_Lib.Enums.Settings.IsLastSidePanelOpen);
             AppSplitView.IsPaneOpen = isSideOpen;
-            App.AppViewModel.CheckAppUpdate();
             var popup = new WaitingPopup("正在初始化");
             popup.ShowPopup();
             bool isCanRequest = await App.BiliViewModel._client.ValidateRequestAsync();
+            App.WriteStartupLog($"网络校验结果: {isCanRequest}");
             if (isCanRequest)
             {
                 try
                 {
                     await App.BiliViewModel.GetRegionsAsync();
+                    App.WriteStartupLog("分区数据加载完成");
                     App.AppViewModel.FontInit();
                     Window.Current.Dispatcher.AcceleratorKeyActivated += App.AppViewModel.AccelertorKeyActivedHandle;
                     if (e.Parameter != null && e.Parameter is string argument && !string.IsNullOrEmpty(argument) && argument.Contains("action"))
@@ -66,14 +67,16 @@ namespace BiliBili_UWP
                         PagePanel.NavigateToPage(Models.Enums.AppMenuItemType.Home);
                     }
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
+                    App.WriteStartupLog("主页初始化失败: " + ex);
                     var rootFrame = Window.Current.Content as Frame;
                     rootFrame.Navigate(typeof(Pages.Main.NetworkErrorPage));
                 }
             }
             else
             {
+                App.WriteStartupLog("网络校验失败，跳转错误页");
                 var rootFrame = Window.Current.Content as Frame;
                 rootFrame.Navigate(typeof(Pages.Main.NetworkErrorPage));
             }
