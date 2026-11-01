@@ -116,10 +116,14 @@ namespace BiliBili_UWP.Pages.Main
                 DynamicLoadingBar.Visibility = Visibility.Visible;
             if (string.IsNullOrEmpty(offset))
             {
-                string lastSeemId = AppTool.GetLocalSetting(BiliBili_Lib.Enums.Settings.LastSeemDynamicId, "0");
-                var temp = await _topicService.GetNewDynamicAsync(lastSeemId);
+                var temp = await _topicService.GetNewDynamicAsync();
                 if (temp != null && temp.cards != null)
-                    data = new Tuple<string, List<Topic>>(temp.history_offset, temp.cards);
+                {
+                    string historyOffset = temp.history_offset;
+                    if (string.IsNullOrEmpty(historyOffset) && temp.cards.Count > 0)
+                        historyOffset = temp.cards[temp.cards.Count - 1].desc?.dynamic_id_str;
+                    data = new Tuple<string, List<Topic>>(historyOffset, temp.cards);
+                }
             }
             else
                 data = await _topicService.GetHistoryDynamicAsync(offset);
@@ -128,6 +132,7 @@ namespace BiliBili_UWP.Pages.Main
                 offset = data.Item1;
                 data.Item2.ForEach(p => TotalList.Add(p));
                 DynamicCollectionInit();
+                BiliTool._logger.Info($"动态页：offset={offset}，本页 {data.Item2.Count} 条，列表 {DynamicCollection.Count} 条");
             }
             DynamicLoadingBar.Visibility = Visibility.Collapsed;
             HolderText.Visibility = DynamicCollection.Count == 0 ? Visibility.Visible : Visibility.Collapsed;

@@ -129,6 +129,21 @@ namespace BiliBili_UWP.Components.Controls
 
         private void BodyInit(Topic data)
         {
+            try
+            {
+                BodyInitCore(data);
+            }
+            catch (Exception ex)
+            {
+                BiliTool._logger.Error($"动态卡片渲染失败：type={data?.desc?.type ?? -1}", ex);
+                MainDisplay.Visibility = Visibility.Collapsed;
+                DescriptionBlock.Visibility = Visibility.Visible;
+                DescriptionBlock.Text = "这条动态暂时无法显示，可前往网页查看";
+            }
+        }
+
+        private void BodyInitCore(Topic data)
+        {
             MainDisplay.Visibility = Visibility.Visible;
             MoreButton.Visibility = Visibility.Collapsed;
             if (data.display != null && data.display.emoji_info != null && data.display.emoji_info.emoji_details.Count > 0)
@@ -250,7 +265,10 @@ namespace BiliBili_UWP.Components.Controls
             }
             else
             {
-                string yo = "";
+                BiliTool._logger.Info($"未支持的动态类型：{data.desc.type}");
+                MainDisplay.Visibility = Visibility.Collapsed;
+                DescriptionBlock.Visibility = Visibility.Visible;
+                DescriptionBlock.Text = "暂不支持该类型的动态，可前往网页查看";
             }
         }
 

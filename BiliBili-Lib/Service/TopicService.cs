@@ -60,7 +60,11 @@ namespace BiliBili_Lib.Service
             var data = await BiliTool.ConvertEntityFromWebAsync<NewDynamicResponse>(url);
             if (data == null || data.cards == null)
                 return null;
-            data.cards.RemoveAll(p => p == null || p.card == null || p.card.Length < 10 || p.desc == null || p.desc.status != 1);
+            int total = data.cards.Count;
+            string typeSummary = string.Join(",", data.cards.Where(p => p?.desc != null)
+                .GroupBy(p => p.desc.type).Select(g => g.Key + "x" + g.Count()));
+            data.cards.RemoveAll(p => p == null || string.IsNullOrEmpty(p.card) || p.desc == null);
+            BiliTool._logger.Info($"动态列表：原始 {total} 条（{typeSummary}），可用 {data.cards.Count} 条");
             if (!string.IsNullOrEmpty(data.max_dynamic_id))
                 AppTool.WriteLocalSetting(Enums.Settings.LastSeemDynamicId, data.max_dynamic_id);
             return data;
@@ -85,15 +89,31 @@ namespace BiliBili_Lib.Service
                 try
                 {
                     var jobj = JObject.Parse(data);
-                    string nextOffset = jobj["next_offset"].ToString();
-                    var topics = JsonConvert.DeserializeObject<List<Topic>>(jobj["cards"].ToString());
+                    int code = jobj.Value<int?>("code") ?? 0;
+                    if (code != 0)
+                    {
+                        BiliTool._logger.Warn($"历史动态请求失败：{jobj.Value<string>("message")}");
+                        return null;
+                    }
+                    var body = jobj["data"] as JObject ?? jobj;
+                    string nextOffset = (body["next_offset"] ?? jobj["next_offset"])?.ToString();
+                    var cardsToken = body["cards"] as JArray ?? jobj["cards"] as JArray;
+                    if (cardsToken == null)
+                    {
+                        BiliTool._logger.Warn("历史动态响应缺少 cards 字段");
+                        return null;
+                    }
+                    var topics = cardsToken.ToObject<List<Topic>>();
                     if (topics == null)
                         return null;
-                    topics.RemoveAll(p => p == null || p.card == null || p.card.Length < 10 || p.desc == null || p.desc.status != 1);
+                    int total = topics.Count;
+                    topics.RemoveAll(p => p == null || string.IsNullOrEmpty(p.card) || p.desc == null);
+                    BiliTool._logger.Info($"历史动态：原始 {total} 条，可用 {topics.Count} 条，next_offset={nextOffset}");
                     return new Tuple<string, List<Topic>>(nextOffset, topics);
                 }
-                catch (Exception)
+                catch (Exception ex)
                 {
+                    BiliTool._logger.Error("历史动态解析失败", ex);
                 }
             }
             return null;
