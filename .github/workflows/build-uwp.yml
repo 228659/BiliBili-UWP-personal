@@ -54,9 +54,11 @@ jobs:
           $layout = "BiliBili-UWP/bin/x64/${{ matrix.configuration }}"
           if (Test-Path "$layout/AppxManifest.xml") {
             robocopy $layout artifact/AppX /E /XF *.pdb /NFL /NDL /NJH /NJS | Out-Null
-            if ($LASTEXITCODE -ge 8) { throw "robocopy failed with $LASTEXITCODE" }
+            $rc = $LASTEXITCODE
+            if ($rc -ge 8) { throw "robocopy failed with $rc" }
+            $global:LASTEXITCODE = 0
           }
-          Get-ChildItem artifact -Recurse -ErrorAction SilentlyContinue | Select-Object FullName, Length
+          "artifact files: " + (Get-ChildItem artifact -Recurse -File -ErrorAction SilentlyContinue).Count
 
       - name: Upload build output
         if: always()
