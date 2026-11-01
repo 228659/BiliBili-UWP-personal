@@ -22,6 +22,10 @@ namespace BiliBili_Lib.Models.Others
         /// 新版关注动态流
         /// </summary>
         public const string WEB_DYNAMIC_FEED = _apiBase + "/x/polymer/web-dynamic/v1/feed/all";
+        /// <summary>
+        /// WBI 网页播放地址（需登录 Cookie，未签名时服务端只给 480P）
+        /// </summary>
+        public const string WEB_VIDEO_PLAY = _apiBase + "/x/player/wbi/playurl";
         public const string _vcBase = "https://api.vc.bilibili.com";
         public const string _liveBase = "https://api.live.bilibili.com";
         public const string _passBase = "https://passport.bilibili.com";

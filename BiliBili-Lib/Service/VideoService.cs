@@ -289,35 +289,56 @@ namespace BiliBili_Lib.Service
         /// <returns></returns>
         public async Task<VideoPlayBase> GetVideoPlayAsync(long aid, long cid, int qn = 64)
         {
-            var param = new Dictionary<string, string>();
-            param.Add("avid", aid.ToString());
-            param.Add("cid", cid.ToString());
-            param.Add("qn", qn.ToString());
-            param.Add("mid", BiliTool.mid);
-            param.Add("fnver", "0");
-            param.Add("fnval", "16");
-            param.Add("fourk", "1");
-            string url = BiliTool.UrlContact(Api.VIDEO_PLAY, param, true,true);
-            // 网页播放接口按 Cookie 识别登录，不带头部 Cookie 只会返回 480P
-            var data = await BiliTool.GetTextFromWebAsync(url, useCookie: true);
-            if (!string.IsNullOrEmpty(data))
+            await BiliTool.EnsureBuvidCookieAsync();
+            var wbiParams = new Dictionary<string, string>();
+            wbiParams.Add("avid", aid.ToString());
+            wbiParams.Add("cid", cid.ToString());
+            wbiParams.Add("qn", qn.ToString());
+            wbiParams.Add("fnver", "0");
+            wbiParams.Add("fnval", "4048");
+            wbiParams.Add("fourk", "1");
+            string data = null;
+            string wbiQuery = await BiliTool.CreateWbiQueryAsync(wbiParams);
+            if (!string.IsNullOrEmpty(wbiQuery))
+                data = await BiliTool.GetTextFromWebAsync(Api.WEB_VIDEO_PLAY + "?" + wbiQuery, useCookie: true);
+            var play = ParsePlayData(data);
+            if (play == null)
+            {
+                await BiliTool.WriteNetworkLogAsync($"WBI 播放地址不可用，回退旧接口：aid={aid}，cid={cid}，qn={qn}");
+                var param = new Dictionary<string, string>();
+                param.Add("avid", aid.ToString());
+                param.Add("cid", cid.ToString());
+                param.Add("qn", qn.ToString());
+                param.Add("mid", BiliTool.mid);
+                param.Add("fnver", "0");
+                param.Add("fnval", "16");
+                param.Add("fourk", "1");
+                string url = BiliTool.UrlContact(Api.VIDEO_PLAY, param, true,true);
+                data = await BiliTool.GetTextFromWebAsync(url, useCookie: true);
+                play = ParsePlayData(data);
+            }
+            if (play is VideoPlayDash dashPlay)
+            {
+                var streams = dashPlay.dash?.video == null ? string.Empty : string.Join(",", dashPlay.dash.video.Select(p => $"{p.id}/{p.codecid}"));
+                var accepted = dashPlay.accept_quality == null ? string.Empty : string.Join("/", dashPlay.accept_quality);
+                await BiliTool.WriteNetworkLogAsync($"播放地址：请求 qn={qn}，返回 quality={dashPlay.quality}，可接受 {accepted}，DASH 流 {streams}，令牌 {(string.IsNullOrEmpty(BiliTool._accessToken) ? "无" : "有")}，SESSDATA {(BiliTool.GetLoginCookieNames().Contains("SESSDATA") ? "有" : "无")}");
+            }
+            return play;
+        }
+        private static VideoPlayBase ParsePlayData(string data)
+        {
+            if (string.IsNullOrEmpty(data))
+                return null;
+            try
             {
                 var jobj = JObject.Parse(data);
                 if (jobj.ContainsKey("dash"))
-                {
-                    var play = JsonConvert.DeserializeObject<VideoPlayDash>(data);
-                    if (play != null)
-                    {
-                        var streams = play.dash?.video == null ? string.Empty : string.Join(",", play.dash.video.Select(p => $"{p.id}/{p.codecid}"));
-                        var accepted = play.accept_quality == null ? string.Empty : string.Join("/", play.accept_quality);
-                        await BiliTool.WriteNetworkLogAsync($"播放地址：请求 qn={qn}，返回 quality={play.quality}，可接受 {accepted}，DASH 流 {streams}，令牌 {(string.IsNullOrEmpty(BiliTool._accessToken) ? "无" : "有")}，SESSDATA {(BiliTool.GetLoginCookieNames().Contains("SESSDATA") ? "有" : "无")}");
-                    }
-                    return play;
-                }
-                else if (jobj.ContainsKey("durl"))
-                {
+                    return JsonConvert.DeserializeObject<VideoPlayDash>(data);
+                if (jobj.ContainsKey("durl"))
                     return JsonConvert.DeserializeObject<VideoPlayFlv>(data);
-                }
+            }
+            catch
+            {
             }
             return null;
         }
