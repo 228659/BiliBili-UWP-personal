@@ -32,12 +32,31 @@ jobs:
         run: |
           & $env:MSBUILD BiliBili-UWP.sln /p:Configuration=Debug /p:Platform=x64 /p:AppxPackageSigningEnabled=false /p:AppxBundle=Never /nologo /v:m
 
+      - name: List build output
+        if: always()
+        shell: pwsh
+        run: |
+          $debug = "BiliBili-UWP/BiliBili-UWP/bin/x64/Debug"
+          if (Test-Path $debug) { Get-ChildItem $debug | Select-Object Name, Length }
+          if (Test-Path "BiliBili-UWP/BiliBili-UWP/AppPackages") {
+            Get-ChildItem "BiliBili-UWP/BiliBili-UWP/AppPackages" -Recurse -Depth 2 | Select-Object FullName, Length
+          }
+
+      - name: Stage build output
+        if: always()
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force artifact | Out-Null
+          $debug = "BiliBili-UWP/BiliBili-UWP/bin/x64/Debug"
+          if (Test-Path "$debug/AppX") { Copy-Item "$debug/AppX" artifact/AppX -Recurse }
+          if (Test-Path "BiliBili-UWP/BiliBili-UWP/AppPackages") {
+            Copy-Item "BiliBili-UWP/BiliBili-UWP/AppPackages" artifact/AppPackages -Recurse
+          }
+
       - name: Upload build output
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: BiliBili-UWP-x64-debug
-          path: |
-            BiliBili-UWP/BiliBili-UWP/bin/x64/Debug/**
-            BiliBili-UWP/BiliBili-UWP/AppPackages/**
+          path: artifact
           if-no-files-found: warn
