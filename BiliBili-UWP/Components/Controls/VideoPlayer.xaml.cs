@@ -487,13 +487,13 @@ namespace BiliBili_UWP.Components.Controls
         #endregion
 
         #region 播放及刷新
-        public async Task RefreshVideoSource(long partId, int progress = 0, bool needRefresh = false)
+        public async Task RefreshVideoSource(long partId, int progress = 0, bool needRefresh = false, bool forceRefresh = false)
         {
             LoadingBar.Visibility = Visibility.Visible;
             if (needRefresh)
                 Reset();
             int generation = ++_sourceGeneration;
-            if (_playData == null || _partId != partId)
+            if (_playData == null || _partId != partId || forceRefresh)
             {
                 _partId = partId;
                 _playData = null;
@@ -508,52 +508,15 @@ namespace BiliBili_UWP.Components.Controls
                 Subtitles.Clear();
                 SubtitleIndexCollection.Clear();
                 HideSubtitle();
+                if (_currentQn == 0)
+                    _currentQn = GetDefaultQuality();
                 var data = await _videoService.GetVideoPlayAsync(_videoId, partId, _currentQn);
                 if (generation != _sourceGeneration)
                     return;
                 if (data != null)
                 {
                     _playData = data;
-                    QualityCollection.Clear();
-                    for (int i = 0; i < _playData.accept_quality.Count; i++)
-                    {
-                        QualityCollection.Add(new Tuple<int, string>(_playData.accept_quality[i], _playData.accept_description[i]));
-                    }
-                    VideoMTC._qualityComboBox.SelectedIndex = -1;
-                    int firstQn = Convert.ToInt32(AppTool.GetLocalSetting(Settings.FirstQuality, "0"));
-                    if (firstQn > 0)
-                    {
-                        for (int i = 0; i < QualityCollection.Count; i++)
-                        {
-                            if (QualityCollection[i].Item1 == firstQn)
-                            {
-                                _currentQn = firstQn;
-                                VideoMTC._qualityComboBox.SelectedIndex = i;
-                                break;
-                            }
-                        }
-                    }
-                    if (_currentQn == 0)
-                    {
-                        bool isFirst4K = AppTool.GetBoolSetting(Settings.IsFirst4K, false);
-                        if (isFirst4K && QualityCollection.First().Item1 == 120)
-                        {
-                            _currentQn = 120;
-                            VideoMTC._qualityComboBox.SelectedIndex = 0;
-                        }
-                        else
-                        {
-                            for (int i = 0; i < QualityCollection.Count; i++)
-                            {
-                                if (QualityCollection[i].Item1 < 120)
-                                {
-                                    _currentQn = QualityCollection[i].Item1;
-                                    VideoMTC._qualityComboBox.SelectedIndex = i;
-                                    break;
-                                }
-                            }
-                        }
-                    }
+                    ApplyQualitySelection();
                 }
             }
             if (generation != _sourceGeneration || _player == null)
@@ -603,7 +566,7 @@ namespace BiliBili_UWP.Components.Controls
             SetFocus();
             LoadingBar.Visibility = Visibility.Collapsed;
         }
-        public async Task RefreshVideoSource(Episode part, bool isRefresh = false, int progress = 0)
+        public async Task RefreshVideoSource(Episode part, bool isRefresh = false, int progress = 0, bool forceRefresh = false)
         {
             if (part == null)
             {
@@ -614,7 +577,7 @@ namespace BiliBili_UWP.Components.Controls
                 Reset();
             LoadingBar.Visibility = Visibility.Visible;
             int generation = ++_sourceGeneration;
-            if (_playData == null || _bangumiPart.id != part.id)
+            if (_playData == null || _bangumiPart.id != part.id || forceRefresh)
             {
                 _bangumiPart = part;
                 _playData = null;
@@ -624,34 +587,15 @@ namespace BiliBili_UWP.Components.Controls
                 DanmakuList = new List<DanmakuModel>();
                 if (DanmakuControls != null)
                     DanmakuControls.ClearAll();
+                if (_currentQn == 0)
+                    _currentQn = GetDefaultQuality();
                 var data = await _animeService.GetBangumiPlayAsync(_bangumiDetail.type, part.cid, _currentQn);
                 if (generation != _sourceGeneration)
                     return;
                 if (data != null)
                 {
                     _playData = data;
-                    QualityCollection.Clear();
-                    for (int i = 0; i < _playData.accept_quality.Count; i++)
-                    {
-                        QualityCollection.Add(new Tuple<int, string>(_playData.accept_quality[i], _playData.accept_description[i]));
-                    }
-                    VideoMTC._qualityComboBox.SelectedIndex = -1;
-                    int firstQn = Convert.ToInt32(AppTool.GetLocalSetting(Settings.FirstQuality, "0"));
-                    if (firstQn > 0)
-                    {
-                        for (int i = 0; i < QualityCollection.Count; i++)
-                        {
-                            if (QualityCollection[i].Item1 == firstQn)
-                            {
-                                _currentQn = firstQn;
-                                VideoMTC._qualityComboBox.SelectedIndex = i;
-                                break;
-                            }
-                        }
-                    }
-                    if (_currentQn == 0)
-                        _currentQn = QualityCollection.First().Item1;
-                    VideoMTC.QualitySelectIndex = 0;
+                    ApplyQualitySelection();
                 }
             }
             if (generation != _sourceGeneration || _player == null)
@@ -700,6 +644,65 @@ namespace BiliBili_UWP.Components.Controls
             UpdateMediaProperties(part.title, part.subtitle, _bangumiDetail.cover);
             SetFocus();
             LoadingBar.Visibility = Visibility.Collapsed;
+        }
+        private int GetDefaultQuality()
+        {
+            int savedQn = Convert.ToInt32(AppTool.GetLocalSetting(Settings.FirstQuality, "0"));
+            if (savedQn > 0)
+                return savedQn;
+            return AppTool.GetBoolSetting(Settings.IsFirst4K, false) ? 120 : 80;
+        }
+        private int FindQualityIndex(int qn)
+        {
+            for (int i = 0; i < QualityCollection.Count; i++)
+            {
+                if (QualityCollection[i].Item1 == qn)
+                    return i;
+            }
+            return -1;
+        }
+        private void ApplyQualitySelection()
+        {
+            if (_playData == null)
+                return;
+            int requestedQn = _currentQn;
+            QualityCollection.Clear();
+            int count = Math.Min(_playData.accept_quality?.Count ?? 0, _playData.accept_description?.Count ?? 0);
+            for (int i = 0; i < count; i++)
+            {
+                QualityCollection.Add(new Tuple<int, string>(_playData.accept_quality[i], _playData.accept_description[i]));
+            }
+            VideoMTC._qualityComboBox.SelectedIndex = -1;
+            int index = FindQualityIndex(requestedQn);
+            if (index == -1 && _playData.quality > 0)
+                index = FindQualityIndex(_playData.quality);
+            if (index == -1)
+            {
+                bool isFirst4K = AppTool.GetBoolSetting(Settings.IsFirst4K, false);
+                if (isFirst4K && QualityCollection.Count > 0 && QualityCollection[0].Item1 == 120)
+                    index = 0;
+                else
+                {
+                    for (int i = 0; i < QualityCollection.Count; i++)
+                    {
+                        if (QualityCollection[i].Item1 < 120)
+                        {
+                            index = i;
+                            break;
+                        }
+                    }
+                }
+                if (index == -1 && QualityCollection.Count > 0)
+                    index = 0;
+            }
+            if (index >= 0)
+            {
+                _currentQn = QualityCollection[index].Item1;
+                VideoMTC._qualityComboBox.SelectedIndex = index;
+                App._logger.Info($"清晰度：请求 {requestedQn}，返回 {_playData.quality}，选中 {_currentQn}（{QualityCollection[index].Item2}），可选 {string.Join("/", QualityCollection.Select(p => p.Item1))}");
+            }
+            else
+                App._logger.Warn($"清晰度列表为空：请求 {requestedQn}，返回 {_playData.quality}");
         }
         private async Task InitInteraction(long cid, int edgeId)
         {
@@ -1326,6 +1329,12 @@ namespace BiliBili_UWP.Components.Controls
                 video = data.dash.video.FirstOrDefault(p => p.id == _currentQn);
             if (video == null)
                 video = data.dash.video.OrderByDescending(p => p.id).FirstOrDefault(p => p.codecid == 7);
+            App._logger.Info($"DASH：qn={_currentQn}，选中 {video?.id}/{video?.codecid} {video?.width}x{video?.height}，码率 {video?.bandwidth}，可用 {string.Join(",", data.dash.video.Select(p => p.id + "/" + p.codecid + "/" + p.width + "x" + p.height))}");
+            if (video == null)
+            {
+                App._logger.Warn($"DASH 无可用视频流：qn={_currentQn}，codec={codecId}");
+                return null;
+            }
             var audio = data.dash.audio?.FirstOrDefault();
             // 遇到新的电影时，可能出现HEVC音频源，若系统未安装相应解码器，则会解码失败，没有声音
             if (!isHevc && data.dash.audio != null && data.dash.audio.Any(p => p.codecs.Contains("mp4a")))
@@ -1341,6 +1350,7 @@ namespace BiliBili_UWP.Components.Controls
         {
             var playList = new Playlist(PlaylistTypes.NetworkHttp);
             var data = _playData as VideoPlayFlv;
+            App._logger.Info($"FLV：qn={_currentQn}，返回 quality={data.quality}，分片 {data.durl?.Count ?? 0}");
             List<string> urls = new List<string>();
             data.durl.ForEach(p =>
             {
@@ -1608,7 +1618,11 @@ namespace BiliBili_UWP.Components.Controls
             {
                 _currentQn = e;
                 AppTool.WriteLocalSetting(Settings.FirstQuality, e.ToString());
-                await RefreshVideoSource(_partId);
+                // 清晰度变化必须按新 qn 重新请求播放地址，否则会一直播放旧清晰度的流
+                if (isBangumi && _bangumiPart != null)
+                    await RefreshVideoSource(_bangumiPart, forceRefresh: true);
+                else if (!isBangumi)
+                    await RefreshVideoSource(_partId, forceRefresh: true);
             }
         }
         private void VideoMTC_CompactOverlayButtonClick(object sender, bool e)
