@@ -7,6 +7,10 @@ on:
 
 jobs:
   build:
+    strategy:
+      fail-fast: false
+      matrix:
+        configuration: [Debug, Release]
     runs-on: windows-2025-vs2026
     timeout-minutes: 60
     steps:
@@ -25,20 +29,20 @@ jobs:
       - name: Restore
         shell: pwsh
         run: |
-          & $env:MSBUILD BiliBili-UWP.sln /t:Restore /p:Configuration=Debug /p:Platform=x64 /nologo /v:m
+          & $env:MSBUILD BiliBili-UWP.sln /t:Restore /p:Configuration=${{ matrix.configuration }} /p:Platform=x64 /nologo /v:m
 
-      - name: Build Debug x64
+      - name: Build ${{ matrix.configuration }} x64
         shell: pwsh
         run: |
-          & $env:MSBUILD BiliBili-UWP.sln /p:Configuration=Debug /p:Platform=x64 /p:AppxPackageSigningEnabled=false /p:AppxBundle=Never /nologo /v:m
+          & $env:MSBUILD BiliBili-UWP.sln /p:Configuration=${{ matrix.configuration }} /p:Platform=x64 /p:AppxPackageSigningEnabled=false /p:AppxBundle=Never /nologo /v:m
 
       - name: List build output
         if: always()
         shell: pwsh
         run: |
-          Get-ChildItem "BiliBili-UWP/bin/x64/Debug" -Force -ErrorAction SilentlyContinue | Select-Object Name, Length
+          $out = "BiliBili-UWP/bin/x64/${{ matrix.configuration }}"
+          Get-ChildItem $out -Force -ErrorAction SilentlyContinue | Select-Object Name, Length
           Get-ChildItem . -Recurse -Filter *.msix -ErrorAction SilentlyContinue | Select-Object FullName, Length
-          Get-ChildItem . -Recurse -Filter AppxManifest.xml -ErrorAction SilentlyContinue | Where-Object { $_.FullName -notmatch '\\obj\\' } | Select-Object FullName
 
       - name: Stage build output
         if: always()
@@ -47,14 +51,17 @@ jobs:
           New-Item -ItemType Directory -Force artifact | Out-Null
           $pkg = "BiliBili-UWP/AppPackages"
           if (Test-Path $pkg) { Copy-Item $pkg artifact/AppPackages -Recurse }
-          $layout = "BiliBili-UWP/bin/x64/Debug/AppX"
-          if (Test-Path $layout) { Copy-Item $layout artifact/AppX -Recurse }
+          $layout = "BiliBili-UWP/bin/x64/${{ matrix.configuration }}"
+          if (Test-Path "$layout/AppxManifest.xml") {
+            robocopy $layout artifact/AppX /E /XF *.pdb /NFL /NDL /NJH /NJS | Out-Null
+            if ($LASTEXITCODE -ge 8) { throw "robocopy failed with $LASTEXITCODE" }
+          }
           Get-ChildItem artifact -Recurse -ErrorAction SilentlyContinue | Select-Object FullName, Length
 
       - name: Upload build output
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: BiliBili-UWP-x64-debug
+          name: BiliBili-UWP-x64-${{ matrix.configuration }}
           path: artifact
           if-no-files-found: warn
