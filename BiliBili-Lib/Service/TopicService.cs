@@ -352,8 +352,9 @@ namespace BiliBili_Lib.Service
                     }
                     if (pictures.Count == 0)
                     {
-                        var textCard = new { item = new { uid = uid, content = text, timestamp = pubTs, reply = comment } };
-                        topic = BuildTopic(idStr, 4, author, like, comment, forward, JsonConvert.SerializeObject(textCard), text);
+                        string fallbackText = string.IsNullOrWhiteSpace(text) ? "该动态暂不支持显示，可前往网页查看" : text;
+                        var textCard = new { item = new { uid = uid, content = fallbackText, timestamp = pubTs, reply = comment } };
+                        topic = BuildTopic(idStr, 4, author, like, comment, forward, JsonConvert.SerializeObject(textCard), fallbackText);
                     }
                     else
                     {
@@ -487,8 +488,9 @@ namespace BiliBili_Lib.Service
                 }
                 else
                 {
-                    var card = new { item = new { uid = uid, content = text, timestamp = pubTs, reply = comment } };
-                    topic = BuildTopic(idStr, 4, author, like, comment, forward, JsonConvert.SerializeObject(card), text);
+                    string fallbackText = string.IsNullOrWhiteSpace(text) ? "该动态暂不支持显示，可前往网页查看" : text;
+                    var card = new { item = new { uid = uid, content = fallbackText, timestamp = pubTs, reply = comment } };
+                    topic = BuildTopic(idStr, 4, author, like, comment, forward, JsonConvert.SerializeObject(card), fallbackText);
                 }
             }
             return topic;
