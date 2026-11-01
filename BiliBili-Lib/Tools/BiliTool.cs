@@ -13,6 +13,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Windows.Security.Cryptography.Certificates;
+using Windows.Storage;
 using Windows.Storage.Streams;
 using Windows.Web.Http;
 using Windows.Web.Http.Filters;
@@ -31,6 +32,17 @@ namespace BiliBili_Lib.Tools
         public static string sid = "";
         public static string mid = "";
         public static ILogger _logger = LogManagerFactory.CreateLogManager().GetLogger("网络请求");
+        public static async Task WriteNetworkLogAsync(string message)
+        {
+            try
+            {
+                var file = await ApplicationData.Current.LocalFolder.CreateFileAsync("network.log", CreationCollisionOption.OpenIfExists);
+                await FileIO.AppendTextAsync(file, $"{DateTime.Now:HH:mm:ss.fff} {message}{Environment.NewLine}");
+            }
+            catch
+            {
+            }
+        }
         /// <summary>
         /// 从网络获取文本
         /// </summary>
@@ -73,12 +85,15 @@ namespace BiliBili_Lib.Tools
                     }
                     else
                     {
-                        _logger.Warn($"请求数据异常(Text)：URL: {url}; Message: {await response.Content.ReadAsStringAsync()}");
+                        string body = await response.Content.ReadAsStringAsync();
+                        await WriteNetworkLogAsync($"状态码 {(int)response.StatusCode}：URL: {url}; Body: {body}");
+                        _logger.Warn($"请求数据异常(Text)：URL: {url}; Message: {body}");
                         return null;
                     }
                 }
                 catch (Exception ex)
                 {
+                    await WriteNetworkLogAsync($"请求异常：URL: {url}; {ex}");
                     _logger.Error($"请求出现异常:{url}", ex);
                     return null;
                 }
