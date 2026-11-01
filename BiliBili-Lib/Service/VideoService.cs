@@ -298,10 +298,32 @@ namespace BiliBili_Lib.Service
             wbiParams.Add("fnval", "4048");
             wbiParams.Add("fourk", "1");
             string data = null;
+            VideoPlayBase play = null;
             string wbiQuery = await BiliTool.CreateWbiQueryAsync(wbiParams);
             if (!string.IsNullOrEmpty(wbiQuery))
-                data = await BiliTool.GetTextFromWebAsync(Api.WEB_VIDEO_PLAY + "?" + wbiQuery, useCookie: true);
-            var play = ParsePlayData(data);
+            {
+                string raw = await BiliTool.GetTextFromWebAsync(Api.WEB_VIDEO_PLAY + "?" + wbiQuery, true, useCookie: true);
+                if (!string.IsNullOrEmpty(raw))
+                {
+                    try
+                    {
+                        var obj = JObject.Parse(raw);
+                        int code = obj.Value<int?>("code") ?? -1;
+                        if (code == 0)
+                        {
+                            var dataToken = obj.SelectToken("data");
+                            if (dataToken != null)
+                                play = ParsePlayData(dataToken.ToString());
+                        }
+                        else
+                            await BiliTool.WriteNetworkLogAsync($"WBI 播放地址返回 code={code}，message={obj.Value<string>("message")}");
+                    }
+                    catch (Exception ex)
+                    {
+                        await BiliTool.WriteNetworkLogAsync($"WBI 播放地址解析失败：{ex.Message}");
+                    }
+                }
+            }
             if (play == null)
             {
                 await BiliTool.WriteNetworkLogAsync($"WBI 播放地址不可用，回退旧接口：aid={aid}，cid={cid}，qn={qn}");

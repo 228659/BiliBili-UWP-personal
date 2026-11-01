@@ -56,6 +56,8 @@ namespace BiliBili_Lib.Tools
         {
             var client = new HttpClient(filter);
             client.DefaultRequestHeaders.TryAppendWithoutValidation("accept", AcceptHeader);
+            client.DefaultRequestHeaders.TryAppendWithoutValidation("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36 Edg/120.0.0.0");
+            client.DefaultRequestHeaders.Referer = new Uri("https://www.bilibili.com/");
             return client;
         }
         public static async Task WriteNetworkLogAsync(string message)
