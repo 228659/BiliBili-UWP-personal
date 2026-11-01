@@ -118,12 +118,12 @@ namespace BiliBili_UWP.Pages.Main
             {
                 string lastSeemId = AppTool.GetLocalSetting(BiliBili_Lib.Enums.Settings.LastSeemDynamicId, "0");
                 var temp = await _topicService.GetNewDynamicAsync(lastSeemId);
-                if (temp != null)
+                if (temp != null && temp.cards != null)
                     data = new Tuple<string, List<Topic>>(temp.history_offset, temp.cards);
             }
             else
                 data = await _topicService.GetHistoryDynamicAsync(offset);
-            if (data != null)
+            if (data != null && data.Item2 != null)
             {
                 offset = data.Item1;
                 data.Item2.ForEach(p => TotalList.Add(p));
@@ -138,6 +138,8 @@ namespace BiliBili_UWP.Pages.Main
         {
             foreach (var item in TotalList)
             {
+                if (item?.desc == null)
+                    continue;
                 if (!DynamicCollection.Contains(item))
                 {
                     var temp = DynamicCollection.Where(p => p.desc.timestamp < item.desc.timestamp).FirstOrDefault();
@@ -185,7 +187,7 @@ namespace BiliBili_UWP.Pages.Main
                     _isDynamicRequesting = true;
                     string lastSeemId = AppTool.GetLocalSetting(BiliBili_Lib.Enums.Settings.LastSeemDynamicId, "0");
                     var data = await _topicService.GetNewDynamicAsync(lastSeemId);
-                    if (data != null)
+                    if (data != null && data.cards != null)
                     {
                         for (int i = data.cards.Count - 1; i >= 0; i--)
                         {

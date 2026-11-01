@@ -25,7 +25,7 @@ namespace BiliBili_Notification
                 var _client = new BiliBiliClient(_access, _refresh, _expiry);
                 string lastId = AppTool.GetLocalSetting(Settings.LastSeemDynamicId, "0");
                 var newDynamic = await _client.Topic.GetNewDynamicAsync(lastId.ToString());
-                if (newDynamic.update_num > 0)
+                if (newDynamic != null && newDynamic.cards != null && newDynamic.update_num > 0)
                 {
                     var toastItems = new List<NotificationModel>();
                     var lastItem = newDynamic.cards.Where(p => p.desc.dynamic_id_str == lastId.ToString()).FirstOrDefault();

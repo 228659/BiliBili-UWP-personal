@@ -87,6 +87,10 @@ namespace BiliBili_Lib.Models.Others
         /// 总排行榜
         /// </summary>
         public const string REGION_TOTAL_RANK = _apiBase + "/x/web-interface/ranking";
+        /// <summary>
+        /// 网页排行榜（新分区ID）
+        /// </summary>
+        public const string REGION_RANK_V2 = _apiBase + "/x/web-interface/ranking/v2";
         #endregion
 
         #region 账户 Account

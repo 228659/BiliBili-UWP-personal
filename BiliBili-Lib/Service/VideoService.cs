@@ -92,24 +92,89 @@ namespace BiliBili_Lib.Service
             return data;
         }
         /// <summary>
+        /// 旧分区ID与新排行榜频道ID的映射，网页排行榜已改用新ID，旧ID返回的是冻结数据
+        /// </summary>
+        private static readonly Dictionary<int, int> WebRankRidMap = new Dictionary<int, int>()
+        {
+            { 0, 0 },{ 1, 1005 },{ 3, 1003 },{ 4, 1008 },{ 5, 1002 },
+            { 36, 1010 },{ 119, 1007 },{ 129, 1004 },{ 155, 1014 },
+            { 181, 1001 },{ 188, 1012 },{ 211, 1020 },{ 217, 1024 },
+            { 223, 1013 },{ 234, 1018 }
+        };
+        /// <summary>
         /// 获取分区排行榜数据
         /// </summary>
         /// <param name="rid">分区ID</param>
         /// <returns></returns>
         public async Task<List<WebVideo>> GetRegionRankAsync(int rid)
         {
-            var param = new Dictionary<string, string>();
-            param.Add("rid", rid.ToString());
-            param.Add("day", "3");
-            if (rid == 0)
+            int webRid;
+            if (!WebRankRidMap.TryGetValue(rid, out webRid))
             {
-                param.Add("type", "1");
-                param.Add("arc_type", "0");
-                string totalUrl = BiliTool.UrlContact(Api.REGION_TOTAL_RANK, param, true);
-                return await BiliTool.ConvertEntityFromWebAsync<List<WebVideo>>(totalUrl, "data.list");
+                var oldParam = new Dictionary<string, string>();
+                oldParam.Add("rid", rid.ToString());
+                oldParam.Add("day", "3");
+                string oldUrl = BiliTool.UrlContact(Api.REGION_PART_RANK, oldParam, true);
+                return await BiliTool.ConvertEntityFromWebAsync<List<WebVideo>>(oldUrl, "data");
             }
-            string url = BiliTool.UrlContact(Api.REGION_PART_RANK, param, true);
-            return await BiliTool.ConvertEntityFromWebAsync<List<WebVideo>>(url, "data");
+            var param = new Dictionary<string, string>();
+            param.Add("rid", webRid.ToString());
+            param.Add("type", "all");
+            string url = BiliTool.UrlContact(Api.REGION_RANK_V2, param, true);
+            string json = await BiliTool.GetTextFromWebAsync(url, true);
+            if (string.IsNullOrEmpty(json))
+                return null;
+            try
+            {
+                var jobj = JObject.Parse(json);
+                if (jobj.Value<int?>("code") != 0)
+                {
+                    BiliTool._logger.Warn($"排行榜请求失败：rid={webRid}，{jobj.Value<string>("message")}");
+                    return null;
+                }
+                var list = jobj["data"]?["list"] as JArray;
+                if (list == null)
+                    return null;
+                var result = new List<WebVideo>();
+                foreach (var video in list)
+                {
+                    var stat = video["stat"];
+                    var owner = video["owner"];
+                    result.Add(new WebVideo()
+                    {
+                        aid = video.Value<string>("aid"),
+                        bvid = video.Value<string>("bvid"),
+                        typename = video.Value<string>("tname"),
+                        title = video.Value<string>("title"),
+                        pic = video.Value<string>("pic"),
+                        description = video.Value<string>("desc"),
+                        play = stat?.Value<long?>("view") ?? 0,
+                        video_review = stat?.Value<int?>("danmaku") ?? 0,
+                        review = stat?.Value<int?>("reply") ?? 0,
+                        favorites = stat?.Value<int?>("favorite") ?? 0,
+                        coins = stat?.Value<int?>("coin") ?? 0,
+                        mid = owner?.Value<long?>("mid") ?? 0,
+                        author = owner?.Value<string>("name"),
+                        duration = FormatRankDuration(video.Value<int?>("duration") ?? 0),
+                        pts = video.Value<int?>("score") ?? 0
+                    });
+                }
+                return result;
+            }
+            catch (Exception ex)
+            {
+                BiliTool._logger.Error($"排行榜数据解析失败：rid={webRid}", ex);
+                return null;
+            }
+        }
+        private static string FormatRankDuration(int seconds)
+        {
+            if (seconds <= 0)
+                return string.Empty;
+            int h = seconds / 3600;
+            int m = seconds % 3600 / 60;
+            int s = seconds % 60;
+            return h > 0 ? $"{h}:{m:00}:{s:00}" : $"{m}:{s:00}";
         }
         /// <summary>
         /// 加载默认的分区内容

@@ -56,13 +56,13 @@ namespace BiliBili_Lib.Service
             {
                 param.Add("update_num_dy_id", lastSeemId);
             }
-            string url = BiliTool.UrlContact(Api.DYNAMIC_NEW, param, true, useiPhone: true);
+            string url = BiliTool.UrlContact(Api.DYNAMIC_NEW, param, true);
             var data = await BiliTool.ConvertEntityFromWebAsync<NewDynamicResponse>(url);
-            if (data != null && data.cards!=null)
-            {
-                data.cards.RemoveAll(p => p == null || p.card == null || p.card.Length < 10 || p.desc.status != 1);
+            if (data == null || data.cards == null)
+                return null;
+            data.cards.RemoveAll(p => p == null || p.card == null || p.card.Length < 10 || p.desc == null || p.desc.status != 1);
+            if (!string.IsNullOrEmpty(data.max_dynamic_id))
                 AppTool.WriteLocalSetting(Enums.Settings.LastSeemDynamicId, data.max_dynamic_id);
-            }
             return data;
         }
         /// <summary>
@@ -87,7 +87,9 @@ namespace BiliBili_Lib.Service
                     var jobj = JObject.Parse(data);
                     string nextOffset = jobj["next_offset"].ToString();
                     var topics = JsonConvert.DeserializeObject<List<Topic>>(jobj["cards"].ToString());
-                    topics.RemoveAll(p => p == null || p.card == null || p.card.Length < 10 || p.desc.status != 1);
+                    if (topics == null)
+                        return null;
+                    topics.RemoveAll(p => p == null || p.card == null || p.card.Length < 10 || p.desc == null || p.desc.status != 1);
                     return new Tuple<string, List<Topic>>(nextOffset, topics);
                 }
                 catch (Exception)
@@ -148,7 +150,9 @@ namespace BiliBili_Lib.Service
                     var jobj = JObject.Parse(data);
                     string nextOffset = jobj["next_offset"].ToString();
                     var topics = JsonConvert.DeserializeObject<List<Topic>>(jobj["cards"].ToString());
-                    topics.RemoveAll(p => p == null || p.card == null || p.card.Length < 10 || p.desc.status != 1);
+                    if (topics == null)
+                        return null;
+                    topics.RemoveAll(p => p == null || p.card == null || p.card.Length < 10 || p.desc == null || p.desc.status != 1);
                     return new Tuple<string, List<Topic>>(nextOffset, topics);
                 }
                 catch (Exception)
