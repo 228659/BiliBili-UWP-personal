@@ -306,10 +306,13 @@ namespace BiliBili_UWP.Models.UI.Others
             if (instance.MediaPlayerElement != null)
             {
                 var player = instance.MediaPlayerElement.MediaPlayer;
-                if (v)
-                    player.Play();
-                else if (player.PlaybackSession.CanPause)
-                    player.Pause();
+                if (player != null)
+                {
+                    if (v)
+                        player.Play();
+                    else if (player.PlaybackSession.CanPause)
+                        player.Pause();
+                }
             }
             instance.PlayButtonClick?.Invoke(instance, v);
         }

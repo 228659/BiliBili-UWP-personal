@@ -19,6 +19,16 @@ namespace BiliBili_Lib.Service
 {
     public class VideoService
     {
+        private static readonly HttpClient _dashHttpClient = CreateDashHttpClient();
+
+        private static HttpClient CreateDashHttpClient()
+        {
+            var client = new HttpClient();
+            client.DefaultRequestHeaders.Referer = new Uri("https://www.bilibili.com");
+            client.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36");
+            return client;
+        }
+
         public VideoService()
         {
 
@@ -245,9 +255,7 @@ namespace BiliBili_Lib.Service
         {
             try
             {
-                HttpClient httpClient = new HttpClient();
-                httpClient.DefaultRequestHeaders.Referer = new Uri("https://www.bilibili.com");
-                httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/69.0.3497.100 Safari/537.36");
+                var httpClient = _dashHttpClient;
                 var mpdStr = $@"<MPD xmlns=""urn:mpeg:DASH:schema:MPD:2011""  profiles=""urn:mpeg:dash:profile:isoff-on-demand:2011"" type=""static"">
                                   <Period  start=""PT0S"">
                                     <AdaptationSet>

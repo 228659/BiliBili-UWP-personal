@@ -96,7 +96,7 @@ namespace BiliBili_UWP.Components.Controls
 
         public int CurrentProgress
         {
-            get => Convert.ToInt32(_player.PlaybackSession.Position.TotalSeconds);
+            get => _player == null ? 0 : Convert.ToInt32(_player.PlaybackSession.Position.TotalSeconds);
         }
 
         private Point _manipulationStartPoint = new Point(0, 0);
@@ -119,6 +119,13 @@ namespace BiliBili_UWP.Components.Controls
         private DispatcherTimer _defaultTimer = new DispatcherTimer();
         private DispatcherTimer _subtitleTimer = new DispatcherTimer();
 
+        private int _sourceGeneration = 0;
+        private int _danmakuGeneration = 0;
+        private int _subtitleGeneration = 0;
+        private int _danmakuCursor = 0;
+        private double _danmakuEmitPosition = -1;
+        private readonly Dictionary<long, List<DanmakuModel>> _danmakuCache = new Dictionary<long, List<DanmakuModel>>();
+
         public VideoTransportControls MTC;
         #endregion
 
@@ -139,7 +146,7 @@ namespace BiliBili_UWP.Components.Controls
             this.InitializeComponent();
             _defaultTimer.Interval = TimeSpan.FromSeconds(1);
             _defaultTimer.Tick += DefaultTimer_Tick;
-            _subtitleTimer.Interval = TimeSpan.FromSeconds(0.1);
+            _subtitleTimer.Interval = TimeSpan.FromSeconds(0.25);
             _subtitleTimer.Tick += SubtitleTimer_Tick;
             DanmakuControls = VideoMTC.DanmakuControls;
             PlayRateCollection = new ObservableCollection<Tuple<double, string>>
@@ -168,7 +175,7 @@ namespace BiliBili_UWP.Components.Controls
                     cid = detail.pages.First().cid;
                 }
             }
-            mediaElement.PosterSource = new BitmapImage(new Uri(detail.pic));
+            mediaElement.PosterSource = new BitmapImage { DecodePixelWidth = 960, UriSource = new Uri(detail.pic) };
             HideNextPart();
             SetPlayerMode();
             ResetPlayRate();
@@ -199,7 +206,7 @@ namespace BiliBili_UWP.Components.Controls
             Reset();
             ResetPlayRate();
             HideNextPart();
-            mediaElement.PosterSource = new BitmapImage(new Uri(detail.cover));
+            mediaElement.PosterSource = new BitmapImage { DecodePixelWidth = 960, UriSource = new Uri(detail.cover) };
             SetPlayerMode();
             await RefreshVideoSource(part);
         }
@@ -232,8 +239,14 @@ namespace BiliBili_UWP.Components.Controls
 
             _playData = null;
             _currentQn = 0;
+            _sourceGeneration++;
+            _danmakuGeneration++;
+            _subtitleGeneration++;
+            _subtitleTimer.Stop();
             QualityCollection.Clear();
-            DanmakuList.Clear();
+            DanmakuList = new List<DanmakuModel>();
+            _danmakuCursor = 0;
+            _danmakuEmitPosition = -1;
             SendDanmakuList.Clear();
             Subtitles.Clear();
             ChoiceCollection.Clear();
@@ -245,10 +258,13 @@ namespace BiliBili_UWP.Components.Controls
             {
                 mediaElement.MediaPlayer.Pause();
                 mediaElement.MediaPlayer.TimelineControllerPositionOffset = TimeSpan.FromSeconds(0);
-                if (_tempSource != null)
-                {
-                    _tempSource.Dispose();
-                }
+            }
+            mediaElement.SetMediaPlayer(null);
+            ReleasePlayer();
+            if (_tempSource != null)
+            {
+                _tempSource.Dispose();
+                _tempSource = null;
             }
             _player = new MediaPlayer();
             double volume = Convert.ToDouble(AppTool.GetLocalSetting(Settings.PlayerLastVolume, "1"));
@@ -271,8 +287,14 @@ namespace BiliBili_UWP.Components.Controls
         #region 媒体播放事件
         private async void Media_PositionChanged(MediaPlaybackSession sender, object args)
         {
+            if (_videoDetail == null || _videoDetail.interaction == null)
+                return;
+            if (_player == null || sender != _player.PlaybackSession)
+                return;
             await DispatcherHelper.ExecuteOnUIThreadAsync(() =>
             {
+                if (_player == null || sender != _player.PlaybackSession)
+                    return;
                 if (_videoDetail != null && _videoDetail.interaction != null)
                 {
                     InteractionEndContainer.Visibility = Visibility.Collapsed;
@@ -289,9 +311,11 @@ namespace BiliBili_UWP.Components.Controls
 
         private async void Media_StatusChanged(MediaPlaybackSession sender, object args)
         {
+            if (_player == null || sender != _player.PlaybackSession)
+                return;
             await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
-                if (_playData == null)
+                if (_player == null || sender != _player.PlaybackSession || _playData == null)
                     return;
                 VideoMTC.IsInit = false;
                 if (sender.PlaybackState == MediaPlaybackState.Paused && VideoMTC.IsPlaying)
@@ -307,14 +331,18 @@ namespace BiliBili_UWP.Components.Controls
 
         private async void Media_Opened(MediaPlayer sender, object args)
         {
+            if (sender != _player)
+                return;
             await Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
              {
+                 if (sender != _player)
+                     return;
                  bool isAutoPlay = AppTool.GetBoolSetting(Settings.IsAutoPlay);
                  HideMTC();
                  if (isAutoPlay)
                  {
                      MTC.IsPlaying = true;
-                     _player.Play();
+                     sender.Play();
                  }
                  if (_needShowHistory)
                  {
@@ -362,8 +390,12 @@ namespace BiliBili_UWP.Components.Controls
 
         private async void Media_Failed(MediaPlayer sender, MediaPlayerFailedEventArgs args)
         {
+            if (sender != _player)
+                return;
             await DispatcherHelper.ExecuteOnUIThreadAsync(() =>
             {
+                if (sender != _player)
+                    return;
                 string msg = "";
                 switch (args.Error)
                 {
@@ -396,15 +428,21 @@ namespace BiliBili_UWP.Components.Controls
 
         private void Volume_Changed(MediaPlayer sender, object args)
         {
+            if (sender != _player)
+                return;
             AppTool.WriteLocalSetting(Settings.PlayerLastVolume, sender.Volume.ToString());
         }
 
         private async void Media_Ended(MediaPlayer sender, object args)
         {
+            if (sender != _player)
+                return;
             await DispatcherHelper.ExecuteOnUIThreadAsync(async () =>
             {
+                if (sender != _player)
+                    return;
                 SendDanmakuList.Clear();
-                if (!_player.IsLoopingEnabled)
+                if (!sender.IsLoopingEnabled)
                 {
                     VideoMTC.IsPlaying = false;
                     if (!isBangumi && _videoDetail.interaction != null)
@@ -453,17 +491,30 @@ namespace BiliBili_UWP.Components.Controls
         {
             LoadingBar.Visibility = Visibility.Visible;
             if (needRefresh)
-            {
                 Reset();
-            }
-            var _mediaPlayer = mediaElement.MediaPlayer;
+            int generation = ++_sourceGeneration;
             if (_playData == null || _partId != partId)
             {
                 _partId = partId;
+                _playData = null;
+                _danmakuGeneration++;
+                _danmakuCursor = 0;
+                _danmakuEmitPosition = -1;
+                DanmakuList = new List<DanmakuModel>();
+                if (DanmakuControls != null)
+                    DanmakuControls.ClearAll();
+                _subtitleGeneration++;
+                _subtitleTimer.Stop();
+                Subtitles.Clear();
+                SubtitleIndexCollection.Clear();
+                HideSubtitle();
                 var data = await _videoService.GetVideoPlayAsync(_videoId, partId, _currentQn);
+                if (generation != _sourceGeneration)
+                    return;
                 if (data != null)
                 {
                     _playData = data;
+                    QualityCollection.Clear();
                     for (int i = 0; i < _playData.accept_quality.Count; i++)
                     {
                         QualityCollection.Add(new Tuple<int, string>(_playData.accept_quality[i], _playData.accept_description[i]));
@@ -505,24 +556,29 @@ namespace BiliBili_UWP.Components.Controls
                     }
                 }
             }
+            if (generation != _sourceGeneration || _player == null)
+                return;
             if (_playData != null)
             {
-                await LoadDanmaku();
-                await LoadSubtitle();
                 MediaSource mediaSource = null;
                 if (_playData is VideoPlayDash)
                     mediaSource = await HandleDashSource();
                 else
                     mediaSource = await HandleFlvSource(_videoId);
+                if (generation != _sourceGeneration || _player == null)
+                {
+                    mediaSource?.Dispose();
+                    return;
+                }
                 if (mediaSource != null)
                 {
                     TimeSpan offset = TimeSpan.FromSeconds(progress);
                     if (progress == 0)
-                        offset = TimeSpan.FromSeconds(_mediaPlayer.PlaybackSession.Position.TotalSeconds);
+                        offset = TimeSpan.FromSeconds(_player.PlaybackSession.Position.TotalSeconds);
                     var other = _tempSource;
                     _tempSource = mediaSource;
-                    _mediaPlayer.Source = new MediaPlaybackItem(mediaSource);
-                    _mediaPlayer.PlaybackSession.PlaybackRate = _playRate;
+                    _player.Source = new MediaPlaybackItem(mediaSource);
+                    _player.PlaybackSession.PlaybackRate = _playRate;
                     if (offset.TotalSeconds > 0)
                         _player.PlaybackSession.Position = offset;
                     other?.Dispose();
@@ -532,6 +588,8 @@ namespace BiliBili_UWP.Components.Controls
                     if (_player.AutoPlay)
                         Resume();
                     mediaElement.PosterSource = null;
+                    _ = LoadDanmakuAsync();
+                    _ = LoadSubtitleAsync();
                 }
                 else
                     ErrorContainer.Visibility = Visibility.Visible;
@@ -555,13 +613,24 @@ namespace BiliBili_UWP.Components.Controls
             if (isRefresh)
                 Reset();
             LoadingBar.Visibility = Visibility.Visible;
+            int generation = ++_sourceGeneration;
             if (_playData == null || _bangumiPart.id != part.id)
             {
                 _bangumiPart = part;
+                _playData = null;
+                _danmakuGeneration++;
+                _danmakuCursor = 0;
+                _danmakuEmitPosition = -1;
+                DanmakuList = new List<DanmakuModel>();
+                if (DanmakuControls != null)
+                    DanmakuControls.ClearAll();
                 var data = await _animeService.GetBangumiPlayAsync(_bangumiDetail.type, part.cid, _currentQn);
+                if (generation != _sourceGeneration)
+                    return;
                 if (data != null)
                 {
                     _playData = data;
+                    QualityCollection.Clear();
                     for (int i = 0; i < _playData.accept_quality.Count; i++)
                     {
                         QualityCollection.Add(new Tuple<int, string>(_playData.accept_quality[i], _playData.accept_description[i]));
@@ -585,14 +654,26 @@ namespace BiliBili_UWP.Components.Controls
                     VideoMTC.QualitySelectIndex = 0;
                 }
             }
+            if (generation != _sourceGeneration || _player == null)
+                return;
             if (_playData != null)
             {
-                await LoadDanmaku();
                 MediaSource mediaSource = null;
                 if (_playData is VideoPlayDash)
                     mediaSource = await HandleDashSource();
                 else
                     mediaSource = await HandleFlvSource(_videoId, true);
+                if (generation != _sourceGeneration || _player == null)
+                {
+                    mediaSource?.Dispose();
+                    return;
+                }
+                if (mediaSource == null)
+                {
+                    ErrorContainer.Visibility = Visibility.Visible;
+                    LoadingBar.Visibility = Visibility.Collapsed;
+                    return;
+                }
                 var other = _tempSource;
                 _tempSource = mediaSource;
                 TimeSpan offset = TimeSpan.FromSeconds(progress);
@@ -609,6 +690,7 @@ namespace BiliBili_UWP.Components.Controls
                 if (_player.AutoPlay)
                     Resume();
                 mediaElement.PosterSource = null;
+                _ = LoadDanmakuAsync();
             }
             else
             {
@@ -689,22 +771,79 @@ namespace BiliBili_UWP.Components.Controls
         #endregion
 
         #region 弹幕
-        private async Task LoadDanmaku()
+        private async Task LoadDanmakuAsync()
         {
             bool isShow = AppTool.GetBoolSetting(Settings.IsDanmakuOpen);
-            DanmakuList.Clear();
-            if (isShow)
-            {
-                DanmakuControls.Visibility = Visibility.Visible;
-                if (isBangumi)
-                    DanmakuList = await _danmakuParse.ParseBiliBili(Convert.ToInt64(_bangumiPart.cid));
-                else
-                    DanmakuList = await _danmakuParse.ParseBiliBili(Convert.ToInt64(_partId));
-            }
-            else
+            if (DanmakuControls == null)
+                return;
+            if (!isShow)
             {
                 DanmakuControls.Visibility = Visibility.Collapsed;
+                DanmakuList = new List<DanmakuModel>();
+                _danmakuCursor = 0;
+                _danmakuEmitPosition = -1;
+                return;
             }
+            if (isBangumi ? _bangumiPart == null : _partId == 0)
+                return;
+            long cid = isBangumi ? Convert.ToInt64(_bangumiPart.cid) : Convert.ToInt64(_partId);
+            DanmakuControls.Visibility = Visibility.Visible;
+            if (_danmakuCache.TryGetValue(cid, out var cached))
+            {
+                ApplyDanmaku(cached);
+                return;
+            }
+            int generation = ++_danmakuGeneration;
+            try
+            {
+                var list = await _danmakuParse.ParseBiliBili(cid);
+                if (generation != _danmakuGeneration || !IsCurrentDanmakuPart(cid))
+                    return;
+                if (list == null)
+                    list = new List<DanmakuModel>();
+                else if (list.Count > 1)
+                    await Task.Run(() => list.Sort((a, b) => a.time.CompareTo(b.time)));
+                if (generation != _danmakuGeneration || !IsCurrentDanmakuPart(cid))
+                    return;
+                if (_danmakuCache.Count >= 3)
+                    _danmakuCache.Remove(_danmakuCache.Keys.First());
+                _danmakuCache[cid] = list;
+                ApplyDanmaku(list);
+            }
+            catch (Exception ex)
+            {
+                App._logger.Error($"弹幕加载失败: {cid}", ex);
+            }
+        }
+
+        private bool IsCurrentDanmakuPart(long cid)
+        {
+            if (isBangumi)
+                return _bangumiPart != null && cid == Convert.ToInt64(_bangumiPart.cid);
+            return cid == Convert.ToInt64(_partId);
+        }
+
+        private void ApplyDanmaku(List<DanmakuModel> list)
+        {
+            DanmakuList = list;
+            double position = _player == null ? 0 : _player.PlaybackSession.Position.TotalSeconds;
+            RebindDanmakuCursor(position > 0 ? position : 0);
+            DanmakuControls.ClearAll();
+        }
+
+        private void RebindDanmakuCursor(double position)
+        {
+            int low = 0, high = DanmakuList.Count;
+            while (low < high)
+            {
+                int mid = low + (high - low) / 2;
+                if (DanmakuList[mid].time <= position)
+                    low = mid + 1;
+                else
+                    high = mid;
+            }
+            _danmakuCursor = low;
+            _danmakuEmitPosition = position;
         }
 
         /// <summary>
@@ -751,7 +890,7 @@ namespace BiliBili_UWP.Components.Controls
         {
             if (!App.BiliViewModel.CheckAccoutStatus())
                 return;
-            if (_playData == null || _player.PlaybackSession.PlaybackState == MediaPlaybackState.Opening)
+            if (_playData == null || _player == null || _player.PlaybackSession.PlaybackState == MediaPlaybackState.Opening)
             {
                 new TipPopup("请等待视频加载完成").ShowMessage();
                 return;
@@ -902,43 +1041,70 @@ namespace BiliBili_UWP.Components.Controls
         #endregion
 
         #region 字幕
-        private async Task LoadSubtitle()
+        private async Task LoadSubtitleAsync()
         {
-            SubtitleIndexCollection.Clear();
-            var index = await _videoService.GetVideoSubtitleIndexAsync(_videoId, _partId);
-            if (index != null)
+            int generation = ++_subtitleGeneration;
+            try
             {
-                index.ForEach(p => SubtitleIndexCollection.Add(p));
+                SubtitleIndexCollection.Clear();
+                var index = await _videoService.GetVideoSubtitleIndexAsync(_videoId, _partId);
+                if (generation != _subtitleGeneration)
+                    return;
+                if (index != null)
+                {
+                    index.ForEach(p => SubtitleIndexCollection.Add(p));
+                }
+                if (SubtitleIndexCollection.Count > 0)
+                {
+                    SubtitleIndexCollection.Insert(0, SubtitleIndexItem.UnSelected);
+                    VideoMTC._subtitleListView.SelectedIndex = -1;
+                    await SubtitleInitCore(SubtitleIndexCollection[1], generation);
+                    if (generation != _subtitleGeneration)
+                        return;
+                    VideoMTC._subtitleListView.SelectedIndex = 1;
+                    VideoMTC.SubtitleHolderVisibility = Visibility.Collapsed;
+                }
+                else
+                    VideoMTC.SubtitleHolderVisibility = Visibility.Visible;
             }
-            if (SubtitleIndexCollection.Count > 0)
+            catch (Exception ex)
             {
-                SubtitleIndexCollection.Insert(0, SubtitleIndexItem.UnSelected);
-                VideoMTC._subtitleListView.SelectedIndex = -1;
-                await SubtitleInit(SubtitleIndexCollection[1]);
-                VideoMTC._subtitleListView.SelectedIndex = 1;
-                VideoMTC.SubtitleHolderVisibility = Visibility.Collapsed;
+                App._logger.Error($"字幕索引加载失败: {_videoId} & {_partId}", ex);
             }
-            else
-                VideoMTC.SubtitleHolderVisibility = Visibility.Visible;
         }
 
         private async Task SubtitleInit(SubtitleIndexItem item)
         {
+            await SubtitleInitCore(item, ++_subtitleGeneration);
+        }
+
+        private async Task SubtitleInitCore(SubtitleIndexItem item, int generation)
+        {
             _subtitleTimer.Stop();
             Subtitles.Clear();
             HideSubtitle();
-            if (string.IsNullOrEmpty(item.subtitle_url))
+            if (item == null || string.IsNullOrEmpty(item.subtitle_url))
                 return;
-            var response = await _videoService.GetSubtitlesAsync(item.subtitle_url);
-            var subtitles = response.body;
-            if (subtitles != null)
+            try
             {
-                subtitles.ForEach(p => Subtitles.Add(p));
-                _subtitleTimer.Start();
+                var response = await _videoService.GetSubtitlesAsync(item.subtitle_url);
+                if (generation != _subtitleGeneration)
+                    return;
+                var subtitles = response?.body;
+                if (subtitles != null)
+                {
+                    Subtitles.Clear();
+                    subtitles.ForEach(p => Subtitles.Add(p));
+                    _subtitleTimer.Start();
+                }
+                else
+                {
+                    new TipPopup("字幕加载异常").ShowError();
+                }
             }
-            else
+            catch (Exception ex)
             {
-                new TipPopup("字幕加载异常").ShowError();
+                App._logger.Error("字幕内容加载失败", ex);
             }
         }
 
@@ -978,16 +1144,57 @@ namespace BiliBili_UWP.Components.Controls
         public void Close()
         {
             Pause();
+            _sourceGeneration++;
+            _danmakuGeneration++;
+            _subtitleGeneration++;
             if (dispRequest != null)
             {
                 dispRequest.RequestRelease();
             }
             dispRequest = null;
             _defaultTimer.Stop();
-            DanmakuList.Clear();
+            _subtitleTimer.Stop();
+            DanmakuList = new List<DanmakuModel>();
+            _danmakuCache.Clear();
+            _danmakuCursor = 0;
+            _danmakuEmitPosition = -1;
+            if (DanmakuControls != null)
+                DanmakuControls.ClearAll();
             mediaElement.SetMediaPlayer(null);
+            ReleasePlayer();
             if (_tempSource != null)
+            {
                 _tempSource.Dispose();
+                _tempSource = null;
+            }
+            LoadingBar.Visibility = Visibility.Collapsed;
+        }
+
+        private void ReleasePlayer()
+        {
+            var player = _player;
+            _player = null;
+            if (player == null)
+                return;
+            player.MediaEnded -= Media_Ended;
+            player.MediaFailed -= Media_Failed;
+            player.MediaOpened -= Media_Opened;
+            player.VolumeChanged -= Volume_Changed;
+            var session = player.PlaybackSession;
+            if (session != null)
+            {
+                session.PositionChanged -= Media_PositionChanged;
+                session.PlaybackStateChanged -= Media_StatusChanged;
+            }
+            try
+            {
+                player.Pause();
+                player.Source = null;
+                player.Dispose();
+            }
+            catch (Exception)
+            {
+            }
         }
         public void SkipForward()
         {
@@ -1053,12 +1260,10 @@ namespace BiliBili_UWP.Components.Controls
 
         private void MediaPresenter_ManipulationDelta(object sender, ManipulationDeltaRoutedEventArgs e)
         {
-            if (_playData == null)
+            if (_playData == null || _player == null)
                 return;
             _manipulationDeltaX += e.Delta.Translation.X;
             _manipulationDeltaY -= e.Delta.Translation.Y;
-            Debug.WriteLine(_manipulationDeltaX);
-            Debug.WriteLine(_manipulationDeltaY);
             if (Math.Abs(_manipulationDeltaX) > 15 || Math.Abs(_manipulationDeltaY) > 15)
             {
                 if (_manipulationType == PlayerManipulationType.None)
@@ -1095,6 +1300,8 @@ namespace BiliBili_UWP.Components.Controls
 
         private void MediaPresenter_ManipulationStarted(object sender, ManipulationStartedRoutedEventArgs e)
         {
+            if (_player == null)
+                return;
             _manipulationStartPoint = e.Position;
             _manipulationProgress = CurrentProgress;
             _manipulationVolume = _player.Volume * 100.0;
@@ -1121,7 +1328,7 @@ namespace BiliBili_UWP.Components.Controls
                 video = data.dash.video.OrderByDescending(p => p.id).FirstOrDefault(p => p.codecid == 7);
             var audio = data.dash.audio?.FirstOrDefault();
             // 遇到新的电影时，可能出现HEVC音频源，若系统未安装相应解码器，则会解码失败，没有声音
-            if (!isHevc && data.dash.audio.Any(p => p.codecs.Contains("mp4a")))
+            if (!isHevc && data.dash.audio != null && data.dash.audio.Any(p => p.codecs.Contains("mp4a")))
                 audio = data.dash.audio.Where(p => p.codecs.Contains("mp4a")).FirstOrDefault();
             MediaSource source = null;
             if (isBangumi)
@@ -1205,7 +1412,8 @@ namespace BiliBili_UWP.Components.Controls
             if (pos != _lastPointerStayPoint)
             {
                 _lastPointerStayPoint = pos;
-                Window.Current.CoreWindow.PointerCursor = new Windows.UI.Core.CoreCursor(Windows.UI.Core.CoreCursorType.Arrow, 0);
+                if (Window.Current.CoreWindow.PointerCursor == null)
+                    Window.Current.CoreWindow.PointerCursor = new Windows.UI.Core.CoreCursor(Windows.UI.Core.CoreCursorType.Arrow, 0);
             }
         }
         private void mediaElement_Tapped(object sender, TappedRoutedEventArgs e)
@@ -1253,7 +1461,7 @@ namespace BiliBili_UWP.Components.Controls
                 var history = _videoDetail.history;
                 if (history != null)
                 {
-                    if (_partId == history.cid)
+                    if (_player != null && _partId == history.cid)
                         _player.PlaybackSession.Position = TimeSpan.FromSeconds(history.progress);
                     else
                     {
@@ -1269,7 +1477,7 @@ namespace BiliBili_UWP.Components.Controls
                 var progress = _bangumiDetail.user_status.progress;
                 if (progress != null)
                 {
-                    if (_bangumiPart.id == progress.last_ep_id)
+                    if (_player != null && _bangumiPart.id == progress.last_ep_id)
                         _player.PlaybackSession.Position = TimeSpan.FromSeconds(progress.last_time);
                     else
                     {
@@ -1429,7 +1637,8 @@ namespace BiliBili_UWP.Components.Controls
         private void VideoMTC_PlayRateChanged(object sender, double e)
         {
             _playRate = e;
-            _player.PlaybackSession.PlaybackRate = _playRate;
+            if (_player != null)
+                _player.PlaybackSession.PlaybackRate = _playRate;
             ShowTip($"播放倍率：{_playRate}");
         }
         private async void VideoMTC_PreviousButtonClick(object sender, RoutedEventArgs e)
@@ -1617,49 +1826,61 @@ namespace BiliBili_UWP.Components.Controls
             // 发送心跳包
             if (_heartBeatCount >= 10)
             {
-                HeartBeat();
                 _heartBeatCount = 0;
+                if (_player != null && _player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing)
+                    HeartBeat();
             }
             else
                 _heartBeatCount++;
             try
             {
-                //弹幕加载
-                if (DanmakuControls == null)
+                var player = mediaElement.MediaPlayer;
+                if (DanmakuControls == null || player == null || DanmakuList.Count == 0)
                     return;
-                if (mediaElement.MediaPlayer != null && mediaElement.MediaPlayer.PlaybackSession.PlaybackState == MediaPlaybackState.Playing && DanmakuList.Count > 0)
+                if (DanmakuControls.Visibility != Visibility.Visible)
+                    return;
+                var session = player.PlaybackSession;
+                if (session.PlaybackState != MediaPlaybackState.Playing)
+                    return;
+                double currentPosition = session.Position.TotalSeconds;
+                if (currentPosition < _danmakuEmitPosition - 1.0 || currentPosition - _danmakuEmitPosition > 4.0)
                 {
-                    int nowDanmaNum = 0;
-                    var currentPosition = mediaElement.MediaPlayer.PlaybackSession.Position.TotalSeconds;
-                    var tempList = DanmakuList.Where(p => p.time > currentPosition && p.time - currentPosition < 1).ToList();
-                    if (tempList.Count > 0)
-                    {
-                        foreach (var item in tempList)
-                        {
-                            if (nowDanmaNum >= _maxDanmakuNumber && _maxDanmakuNumber != 0)
-                                break;
-                            if (!IsTextShouldShield(item.text))
-                            {
-                                switch (item.location)
-                                {
-                                    case DanmakuLocation.Top:
-                                        DanmakuControls.AddTopDanmu(item, false);
-                                        break;
-                                    case DanmakuLocation.Bottom:
-                                        DanmakuControls.AddBottomDanmu(item, false);
-                                        break;
-                                    case DanmakuLocation.Position:
-                                        DanmakuControls.AddPositionDanmu(item);
-                                        break;
-                                    default:
-                                        DanmakuControls.AddRollDanmu(item, false);
-                                        break;
-                                }
-                                nowDanmaNum++;
-                            }
-                        }
-                    }
+                    RebindDanmakuCursor(currentPosition);
+                    DanmakuControls.ClearAll();
+                    return;
                 }
+                int nowDanmaNum = 0;
+                double windowEnd = currentPosition + 1.0;
+                while (_danmakuCursor < DanmakuList.Count)
+                {
+                    var item = DanmakuList[_danmakuCursor];
+                    if (item.time > windowEnd)
+                        break;
+                    _danmakuCursor++;
+                    if (item.time <= currentPosition || item.time <= _danmakuEmitPosition)
+                        continue;
+                    if (_maxDanmakuNumber != 0 && nowDanmaNum >= _maxDanmakuNumber)
+                        continue;
+                    if (IsTextShouldShield(item.text))
+                        continue;
+                    switch (item.location)
+                    {
+                        case DanmakuLocation.Top:
+                            DanmakuControls.AddTopDanmu(item, false);
+                            break;
+                        case DanmakuLocation.Bottom:
+                            DanmakuControls.AddBottomDanmu(item, false);
+                            break;
+                        case DanmakuLocation.Position:
+                            DanmakuControls.AddPositionDanmu(item);
+                            break;
+                        default:
+                            DanmakuControls.AddRollDanmu(item, false);
+                            break;
+                    }
+                    nowDanmaNum++;
+                }
+                _danmakuEmitPosition = currentPosition;
             }
             catch (Exception)
             {
@@ -1668,18 +1889,19 @@ namespace BiliBili_UWP.Components.Controls
         }
         private void SubtitleTimer_Tick(object sender, object e)
         {
-            if (_player.PlaybackSession.PlaybackState == MediaPlaybackState.Playing)
+            if (_player == null || Subtitles.Count == 0)
+                return;
+            if (_player.PlaybackSession.PlaybackState != MediaPlaybackState.Playing)
+                return;
+            var time = _player.PlaybackSession.Position.TotalSeconds;
+            var subtitle = Subtitles.FirstOrDefault(p => p.from <= time && p.to >= time);
+            if (subtitle != null && !string.IsNullOrEmpty(subtitle.content))
             {
-                var time = _player.PlaybackSession.Position.TotalSeconds;
-                var subtitle = Subtitles.FirstOrDefault(p => p.from <= time && p.to >= time);
-                if (subtitle != null && !string.IsNullOrEmpty(subtitle.content))
-                {
-                    ShowSubtitle(subtitle.content);
-                }
-                else
-                {
-                    HideSubtitle();
-                }
+                ShowSubtitle(subtitle.content);
+            }
+            else
+            {
+                HideSubtitle();
             }
         }
         #endregion
@@ -1785,7 +2007,7 @@ namespace BiliBili_UWP.Components.Controls
         public async Task<bool> ShowNextPart()
         {
             var index = GetNextPartIndex();
-            if (index != -1 && CurrentProgress >= _player.PlaybackSession.NaturalDuration.TotalSeconds - 1)
+            if (index != -1 && _player != null && CurrentProgress >= _player.PlaybackSession.NaturalDuration.TotalSeconds - 1)
             {
                 bool isAutoNext = AppTool.GetBoolSetting(Settings.IsAutoNextPart, false);
                 if (!isAutoNext)
@@ -1911,7 +2133,17 @@ namespace BiliBili_UWP.Components.Controls
             isShowDanmaku = !isShowDanmaku;
             AppTool.WriteLocalSetting(Settings.IsDanmakuOpen, isShowDanmaku.ToString());
             DanmakuVisibilityButton.Content = isShowDanmaku ? "" : "";
-            await LoadDanmaku();
+            if (isShowDanmaku)
+                await LoadDanmakuAsync();
+            else
+            {
+                _danmakuGeneration++;
+                DanmakuList = new List<DanmakuModel>();
+                _danmakuCursor = 0;
+                _danmakuEmitPosition = -1;
+                DanmakuControls.Visibility = Visibility.Collapsed;
+                DanmakuControls.ClearAll();
+            }
         }
         public async Task ScreenShot()
         {
