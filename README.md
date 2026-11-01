@@ -3,7 +3,7 @@
 > 基于 [Richasy/BiliBili-UWP](https://github.com/Richasy/BiliBili-UWP) 的个人自用修改版。上游项目已停止维护并从 Microsoft Store 下架。
 > 本仓库只做兼容性修复，不提供商业服务，与哔哩哔哩官方无关。
 
-当前版本：**1.3.12.0**（2026-11-01） · 仅支持 **Windows 10 2004+ / x64**
+当前版本：**1.3.12.0**（2026-11-01） · 支持 **Windows 10 2004 及以上（含 Windows 11）/ x64**
 
 ## 这个版本改了什么
 
