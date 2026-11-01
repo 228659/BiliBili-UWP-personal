@@ -298,7 +298,8 @@ namespace BiliBili_Lib.Service
             param.Add("fnval", "16");
             param.Add("fourk", "1");
             string url = BiliTool.UrlContact(Api.VIDEO_PLAY, param, true,true);
-            var data = await BiliTool.GetTextFromWebAsync(url);
+            // 网页播放接口按 Cookie 识别登录，不带头部 Cookie 只会返回 480P
+            var data = await BiliTool.GetTextFromWebAsync(url, useCookie: true);
             if (!string.IsNullOrEmpty(data))
             {
                 var jobj = JObject.Parse(data);
@@ -309,7 +310,7 @@ namespace BiliBili_Lib.Service
                     {
                         var streams = play.dash?.video == null ? string.Empty : string.Join(",", play.dash.video.Select(p => $"{p.id}/{p.codecid}"));
                         var accepted = play.accept_quality == null ? string.Empty : string.Join("/", play.accept_quality);
-                        await BiliTool.WriteNetworkLogAsync($"播放地址：请求 qn={qn}，返回 quality={play.quality}，可接受 {accepted}，DASH 流 {streams}，令牌 {(string.IsNullOrEmpty(BiliTool._accessToken) ? "无" : "有")}");
+                        await BiliTool.WriteNetworkLogAsync($"播放地址：请求 qn={qn}，返回 quality={play.quality}，可接受 {accepted}，DASH 流 {streams}，令牌 {(string.IsNullOrEmpty(BiliTool._accessToken) ? "无" : "有")}，SESSDATA {(BiliTool.GetLoginCookieNames().Contains("SESSDATA") ? "有" : "无")}");
                     }
                     return play;
                 }
