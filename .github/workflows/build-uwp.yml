@@ -51,12 +51,16 @@ jobs:
           New-Item -ItemType Directory -Force artifact | Out-Null
           $pkg = "BiliBili-UWP/AppPackages"
           if (Test-Path $pkg) { Copy-Item $pkg artifact/AppPackages -Recurse }
-          $layout = "BiliBili-UWP/bin/x64/${{ matrix.configuration }}"
-          if (Test-Path "$layout/AppxManifest.xml") {
-            robocopy $layout artifact/AppX /E /XF *.pdb /NFL /NDL /NJH /NJS | Out-Null
-            $rc = $LASTEXITCODE
-            if ($rc -ge 8) { throw "robocopy failed with $rc" }
-            $global:LASTEXITCODE = 0
+          # 直接注册 bin 布局会在激活阶段崩溃，改用 MSIX 解包后的目录
+          $msix = Get-ChildItem $pkg -Recurse -Filter *.msix -ErrorAction SilentlyContinue | Select-Object -First 1
+          if ($msix) {
+            Add-Type -AssemblyName System.IO.Compression.FileSystem
+            $dest = Join-Path $PWD "artifact/AppX"
+            New-Item -ItemType Directory -Force $dest | Out-Null
+            [System.IO.Compression.ZipFile]::ExtractToDirectory($msix.FullName, $dest)
+            "extracted $($msix.Name) -> artifact/AppX"
+          } else {
+            Write-Warning "no msix found under $pkg"
           }
           "artifact files: " + (Get-ChildItem artifact -Recurse -File -ErrorAction SilentlyContinue).Count
 

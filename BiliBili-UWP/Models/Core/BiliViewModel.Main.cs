@@ -68,12 +68,44 @@ namespace BiliBili_UWP.Models.Core
             var regions = await _client.GetRegionIndexAsync();
             if (regions != null)
             {
-                await IOTool.SetLocalDataAsync("region.json", JsonConvert.SerializeObject(regions.Where(p => p.children != null).ToList()));
+                // Region 按 tid 重写了 Equals，直接序列化会被 Newtonsoft 的循环检测误判为自引用
+                var cache = regions.Where(p => p.children != null).Select(p => new
+                {
+                    p.tid,
+                    p.reid,
+                    p.name,
+                    p.logo,
+                    p.@goto,
+                    p.param,
+                    p.type,
+                    p.uri,
+                    p.is_bangumi,
+                    children = p.children.Select(c => new
+                    {
+                        c.tid,
+                        c.reid,
+                        c.name,
+                        c.logo,
+                        c.@goto,
+                        c.param,
+                        c.type
+                    }).ToList()
+                }).ToList();
+                try
+                {
+                    await IOTool.SetLocalDataAsync("region.json", JsonConvert.SerializeObject(cache));
+                }
+                catch (Exception ex)
+                {
+                    BiliTool._logger.Warn($"分区缓存写入失败：{ex.Message}");
+                }
             }
             else
             {
                 regions = await IOTool.GetLocalDataAsync<List<RegionContainer>>("region.json");
             }
+            if (regions == null)
+                return;
             regions.Where(p => p.children != null).ToList().ForEach(p => RegionCollection.Add(p));
         }
 
