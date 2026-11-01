@@ -59,7 +59,7 @@ namespace BiliBili_Lib.Models.BiliBili
         }
         public class Member
         {
-            public int mid { get; set; }
+            public long mid { get; set; }
             public string uname { get; set; }
             public string avatar { get; set; }
             public string sex { get; set; }

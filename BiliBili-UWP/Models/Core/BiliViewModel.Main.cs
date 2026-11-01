@@ -184,7 +184,7 @@ namespace BiliBili_UWP.Models.Core
             }
         }
 
-        public async Task AddViewLater(object sender, int id)
+        public async Task AddViewLater(object sender, long id)
         {
             var LaterViewButton = sender as AppBarButton;
             LaterViewButton.IsEnabled = false;

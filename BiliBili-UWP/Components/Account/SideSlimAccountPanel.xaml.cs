@@ -159,7 +159,7 @@ namespace BiliBili_UWP.Components.Account
         private void Dynamic_Tapped(object sender, TappedRoutedEventArgs e)
         {
             var me = App.BiliViewModel._client.Account.Me;
-            App.AppViewModel.NavigateToSubPage(typeof(Pages_Share.Sub.Account.DetailPage), new Tuple<int, bool>(me.mid, true));
+            App.AppViewModel.NavigateToSubPage(typeof(Pages_Share.Sub.Account.DetailPage), new Tuple<long, bool>(me.mid, true));
         }
 
         private void Fans_Tapped(object sender, TappedRoutedEventArgs e)

@@ -164,12 +164,12 @@ namespace BiliBili_Lib.Models.BiliBili.Anime
 
     public class Episode
     {
-        public int aid { get; set; }
+        public long aid { get; set; }
         public string badge { get; set; }
         public Badge badge_info { get; set; }
         public int badge_type { get; set; }
         public string bvid { get; set; }
-        public int cid { get; set; }
+        public long cid { get; set; }
         public string cover { get; set; }
         public string from { get; set; }
         public int id { get; set; }

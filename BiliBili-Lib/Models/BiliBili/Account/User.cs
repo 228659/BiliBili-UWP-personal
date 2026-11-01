@@ -27,7 +27,7 @@ namespace BiliBili_Lib.Models.BiliBili.Account
         public string description { get; set; }
         public int article { get; set; }
         public object attentions { get; set; }
-        public int fans { get; set; }
+        public long fans { get; set; }
         public int friend { get; set; }
         public int attention { get; set; }
         public string sign { get; set; }

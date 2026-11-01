@@ -156,10 +156,10 @@ namespace BiliBili_UWP.Pages.Main
         private async void RemoveItem_Click(object sender, RoutedEventArgs e)
         {
             var aid = (sender as AppBarButton).Tag.ToString();
-            bool result = await _account.DeleteHistoryAsync(Convert.ToInt32(aid));
+            bool result = await _account.DeleteHistoryAsync(Convert.ToInt64(aid));
             if (result)
             {
-                HistoryCollection.Remove(HistoryCollection.Where(p=>p.aid==Convert.ToInt32(aid)).FirstOrDefault());
+                HistoryCollection.Remove(HistoryCollection.Where(p=>p.aid==Convert.ToInt64(aid)).FirstOrDefault());
                 HolderText.Visibility = HistoryCollection.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
             }
             else

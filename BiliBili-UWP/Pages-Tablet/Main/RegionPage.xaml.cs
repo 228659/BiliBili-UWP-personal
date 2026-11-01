@@ -39,9 +39,9 @@ namespace BiliBili_UWP.Pages_Tablet.Main
             public int Tid { get; set; }
             public ObservableCollection<RegionVideo> Collection { get; set; }
             public ObservableCollection<RegionBanner> Banner { get; set; }
-            public int Ctime { get; set; }
+            public long Ctime { get; set; }
             public RegionData() { }
-            public RegionData(int tid, int ctime = 0)
+            public RegionData(int tid, long ctime = 0)
             {
                 Tid = tid;
                 Collection = new ObservableCollection<RegionVideo>();
@@ -114,7 +114,7 @@ namespace BiliBili_UWP.Pages_Tablet.Main
         private void VideoGridView_ItemClick(object sender, ItemClickEventArgs e)
         {
             var item = e.ClickedItem as RegionVideo;
-            App.AppViewModel.PlayVideo(Convert.ToInt32(item.param));
+            App.AppViewModel.PlayVideo(Convert.ToInt64(item.param));
         }
 
         private async void RegionListView_ItemClick(object sender, ItemClickEventArgs e)

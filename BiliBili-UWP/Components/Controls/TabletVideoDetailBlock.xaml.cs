@@ -31,8 +31,8 @@ namespace BiliBili_UWP.Components.Controls
         private ObservableCollection<Staff> StaffCollection = new ObservableCollection<Staff>();
         private ObservableCollection<VideoDetail> PlayBackupCollection = new ObservableCollection<VideoDetail>();
         private VideoService _videoService = App.BiliViewModel._client.Video;
-        private int _currentPartId = 0;
-        private int videoId = 0;
+        private long _currentPartId = 0;
+        private long videoId = 0;
         private string bvId = "";
         private List<FavoriteItem> _tempFavorites = new List<FavoriteItem>();
         public VideoPlayer VideoPlayer;
@@ -72,7 +72,7 @@ namespace BiliBili_UWP.Components.Controls
             }
         }
 
-        public async Task Init(int startId, List<VideoDetail> playList)
+        public async Task Init(long startId, List<VideoDetail> playList)
         {
             PlayListContainer.Visibility = Visibility.Visible;
             playList.ForEach(p => PlayBackupCollection.Add(p));
@@ -86,7 +86,7 @@ namespace BiliBili_UWP.Components.Controls
             PlayListContainer.Visibility = Visibility.Collapsed;
         }
 
-        public async Task Init(int aid, int partId = 0, string bvId = "")
+        public async Task Init(long aid, long partId = 0, string bvId = "")
         {
             LoadingRing.IsActive = true;
             MyVideoPlayer.Close();
@@ -100,7 +100,7 @@ namespace BiliBili_UWP.Components.Controls
             }
         }
 
-        public async Task Init(VideoDetail detail, int partId = 0)
+        public async Task Init(VideoDetail detail, long partId = 0)
         {
             Reset();
             App.AppViewModel.CurrentPlayerType = Models.Enums.PlayerType.Video;
@@ -444,7 +444,7 @@ namespace BiliBili_UWP.Components.Controls
             }
         }
 
-        private async void MyVideoPlayer_MediaEnded(object sender, int e)
+        private async void MyVideoPlayer_MediaEnded(object sender, long e)
         {
             if (PlayBackupCollection.Count > 0)
             {

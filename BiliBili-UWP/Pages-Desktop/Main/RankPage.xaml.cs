@@ -131,7 +131,7 @@ namespace BiliBili_UWP.Pages.Main
                 }
                 source.Item2.ForEach(p => DisplayCollection.Add(p));
             }
-            NoDataContainer.Visibility = source.Item2.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+            NoDataContainer.Visibility = (source == null || source.Item2.Count == 0) ? Visibility.Visible : Visibility.Collapsed;
             LoadingRing.IsActive = false;
         }
         private async void RegionListView_ItemClick(object sender, ItemClickEventArgs e)
@@ -145,7 +145,7 @@ namespace BiliBili_UWP.Pages.Main
         {
             var item = e.ClickedItem as WebVideo;
             var container = VideoGridView.ContainerFromItem(item);
-            App.AppViewModel.PlayVideo(Convert.ToInt32(item.aid), container, "");
+            App.AppViewModel.PlayVideo(Convert.ToInt64(item.aid), container, "");
         }
 
         private void VideoGridView_ContainerContentChanging(ListViewBase sender, ContainerContentChangingEventArgs args)

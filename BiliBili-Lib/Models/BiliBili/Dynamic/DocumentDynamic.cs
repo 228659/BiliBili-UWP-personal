@@ -56,7 +56,7 @@ namespace BiliBili_Lib.Models.BiliBili
         public class DocumentList
         {
             public int id { get; set; }
-            public int mid { get; set; }
+            public long mid { get; set; }
             public string name { get; set; }
             public string image_url { get; set; }
             public int update_time { get; set; }
@@ -95,7 +95,7 @@ namespace BiliBili_Lib.Models.BiliBili
 
     public class Stats
     {
-        public int view { get; set; }
+        public long view { get; set; }
         public int favorite { get; set; }
         public int like { get; set; }
         public int dislike { get; set; }
@@ -103,11 +103,11 @@ namespace BiliBili_Lib.Models.BiliBili
         public int share { get; set; }
         public int coin { get; set; }
         public int dynamic { get; set; }
-        public int danmaku { get; set; }
+        public long danmaku { get; set; }
     }
     public class Author
     {
-        public int mid { get; set; }
+        public long mid { get; set; }
         public string name { get; set; }
         public string face { get; set; }
         public Pendant pendant { get; set; }

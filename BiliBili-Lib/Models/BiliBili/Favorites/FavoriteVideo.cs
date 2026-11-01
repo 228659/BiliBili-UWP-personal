@@ -20,7 +20,7 @@ namespace BiliBili_Lib.Models.BiliBili.Favorites
         public int duration { get; set; }
         public int elec_open { get; set; }
         public int fav_state { get; set; }
-        public int id { get; set; }
+        public long id { get; set; }
         public string intro { get; set; }
         public int like_state { get; set; }
         public string link { get; set; }
@@ -36,8 +36,8 @@ namespace BiliBili_Lib.Models.BiliBili.Favorites
         {
             public int coin { get; set; }
             public int collect { get; set; }
-            public int danmaku { get; set; }
-            public int play { get; set; }
+            public long danmaku { get; set; }
+            public long play { get; set; }
             public int reply { get; set; }
             public int share { get; set; }
             public int thumb_down { get; set; }

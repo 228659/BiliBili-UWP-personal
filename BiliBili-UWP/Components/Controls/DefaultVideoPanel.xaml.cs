@@ -162,7 +162,7 @@ namespace BiliBili_UWP.Components.Controls
 
         private async void LaterViewButton_Click(object sender, RoutedEventArgs e)
         {
-            await App.BiliViewModel.AddViewLater(sender, Convert.ToInt32(VideoId));
+            await App.BiliViewModel.AddViewLater(sender, Convert.ToInt64(VideoId));
         }
 
         public FlyoutBase ExtraFlyout

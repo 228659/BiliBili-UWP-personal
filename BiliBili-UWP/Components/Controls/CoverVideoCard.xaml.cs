@@ -23,15 +23,15 @@ namespace BiliBili_UWP.Components.Controls
         {
             this.InitializeComponent();
         }
-        public int VideoId
+        public object VideoId
         {
-            get { return (int)GetValue(VideoIdProperty); }
+            get { return GetValue(VideoIdProperty); }
             set { SetValue(VideoIdProperty, value); }
         }
 
         // Using a DependencyProperty as the backing store for VideoId.  This enables animation, styling, binding, etc...
         public static readonly DependencyProperty VideoIdProperty =
-            DependencyProperty.Register("VideoId", typeof(int), typeof(CoverVideoCard), new PropertyMetadata(0));
+            DependencyProperty.Register("VideoId", typeof(object), typeof(CoverVideoCard), new PropertyMetadata(null));
 
         public string Title
         {
@@ -133,7 +133,7 @@ namespace BiliBili_UWP.Components.Controls
 
         private async void LaterViewButton_Click(object sender, RoutedEventArgs e)
         {
-            await App.BiliViewModel.AddViewLater(sender, Convert.ToInt32(VideoId));
+            await App.BiliViewModel.AddViewLater(sender, Convert.ToInt64(VideoId));
         }
     }
 }

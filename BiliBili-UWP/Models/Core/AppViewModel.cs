@@ -86,11 +86,11 @@ namespace BiliBili_UWP.Models.Core
                     args.TryGetValue("cid", out string videoCid);
                     var videoArgs = new VideoActiveArgs();
                     if (!string.IsNullOrEmpty(videoAid))
-                        videoArgs.aid = Convert.ToInt32(videoAid);
+                        videoArgs.aid = Convert.ToInt64(videoAid);
                     if (!string.IsNullOrEmpty(videoBvId))
                         videoArgs.bvid = videoBvId;
                     if (!string.IsNullOrEmpty(videoCid))
-                        videoArgs.cid = Convert.ToInt32(videoCid);
+                        videoArgs.cid = Convert.ToInt64(videoCid);
                     PlayVideo(videoArgs);
                     break;
                 case "bangumi":
@@ -115,7 +115,7 @@ namespace BiliBili_UWP.Models.Core
         /// <param name="aid">AV号</param>
         /// <param name="sender">触发控件（用于查找封面以实现连接动画）</param>
         /// <param name="fromSign">来源参数</param>
-        public void PlayVideo(int aid, object sender = null, string fromSign = "")
+        public void PlayVideo(long aid, object sender = null, string fromSign = "")
         {
             //App._watch.Start();
             CurrentSubPageControl.CheckSubReplyPage();
@@ -137,7 +137,7 @@ namespace BiliBili_UWP.Models.Core
             else
             {
                 CurrentSidePanel.SetSelectedItem(AppMenuItemType.Line);
-                CurrentPagePanel.NavigateToPage(AppMenuItemType.VideoPlayer, new Tuple<int, string>(aid, fromSign));
+                CurrentPagePanel.NavigateToPage(AppMenuItemType.VideoPlayer, new Tuple<long, string>(aid, fromSign));
             }
             
             //App._watch.Stop();
@@ -162,7 +162,7 @@ namespace BiliBili_UWP.Models.Core
         /// </summary>
         /// <param name="aid">AV号</param>
         /// <param name="videoList">播放列表</param>
-        public void PlayVideoList(int aid, object sender, List<VideoDetail> videoList)
+        public void PlayVideoList(long aid, object sender, List<VideoDetail> videoList)
         {
             CurrentSubPageControl.CheckSubReplyPage();
             SelectedSideMenuItem = null;
@@ -174,12 +174,12 @@ namespace BiliBili_UWP.Models.Core
             if (App._isTabletMode)
             {
                 CurrentTopPanel.SetSelectedItem(AppMenuItemType.Line);
-                TabletMainPage.Current.NavigateToPage(AppMenuItemType.VideoPlayer, new Tuple<int, List<VideoDetail>>(aid, videoList));
+                TabletMainPage.Current.NavigateToPage(AppMenuItemType.VideoPlayer, new Tuple<long, List<VideoDetail>>(aid, videoList));
             }
             else
             {
                 CurrentSidePanel.SetSelectedItem(AppMenuItemType.Line);
-                CurrentPagePanel.NavigateToPage(AppMenuItemType.VideoPlayer, new Tuple<int, List<VideoDetail>>(aid, videoList));
+                CurrentPagePanel.NavigateToPage(AppMenuItemType.VideoPlayer, new Tuple<long, List<VideoDetail>>(aid, videoList));
             }
         }
         /// <summary>
@@ -337,14 +337,14 @@ namespace BiliBili_UWP.Models.Core
         /// </summary>
         /// <param name="video">视频ID</param>
         /// <param name="cid">分片ID</param>
-        public async void PlayVideoSeparate(VideoDetail video, int cid, bool isCloseCurrentPage = true)
+        public async void PlayVideoSeparate(VideoDetail video, long cid, bool isCloseCurrentPage = true)
         {
             CoreApplicationView newView = CoreApplication.CreateNewView();
             int newViewId = 0;
             await newView.Dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
                 Frame frame = new Frame();
-                frame.Navigate(typeof(MiniPlayerPage), new Tuple<VideoDetail, int>(video, cid));
+                frame.Navigate(typeof(MiniPlayerPage), new Tuple<VideoDetail, long>(video, cid));
                 Window.Current.Content = frame;
                 // You have to activate the window in order to show it later.
                 Window.Current.Activate();
@@ -511,7 +511,7 @@ namespace BiliBili_UWP.Models.Core
             if (result.Type.ToString().Contains("Video"))
             {
                 if (result.Type == UriType.VideoA)
-                    PlayVideo(Convert.ToInt32(result.Param));
+                    PlayVideo(Convert.ToInt64(result.Param));
                 else
                 {
                     var args = new VideoActiveArgs() { bvid = result.Param };

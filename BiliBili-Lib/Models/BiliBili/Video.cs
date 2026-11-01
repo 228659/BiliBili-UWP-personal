@@ -66,13 +66,13 @@ namespace BiliBili_Lib.Models.BiliBili
 
     public class Args
     {
-        public int up_id { get; set; }
+        public long up_id { get; set; }
         public string up_name { get; set; }
         public int rid { get; set; }
         public string rname { get; set; }
         public int tid { get; set; }
         public string tname { get; set; }
-        public int aid { get; set; }
+        public long aid { get; set; }
     }
 
     public class ThreePointV2
@@ -96,11 +96,11 @@ namespace BiliBili_Lib.Models.BiliBili
         public string typename { get; set; }
         public string title { get; set; }
         public string subtitle { get; set; }
-        public int play { get; set; }
+        public long play { get; set; }
         public int review { get; set; }
         public int video_review { get; set; }
         public int favorites { get; set; }
-        public int mid { get; set; }
+        public long mid { get; set; }
         public string author { get; set; }
         public string description { get; set; }
         public string create { get; set; }

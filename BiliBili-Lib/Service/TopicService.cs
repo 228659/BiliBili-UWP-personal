@@ -130,7 +130,7 @@ namespace BiliBili_Lib.Service
         /// <param name="page">页码</param>
         /// <param name="offset_id">偏移值，初次不需要，每次请求会返回下一次请求的偏移值</param>
         /// <returns>Item1:下次偏移值;Item2:动态列表</returns>
-        public async Task<Tuple<string, List<Topic>>> GetUserSpaceDynamicAsync(int uid, int page = 1, string offset_id = "0")
+        public async Task<Tuple<string, List<Topic>>> GetUserSpaceDynamicAsync(long uid, int page = 1, string offset_id = "0")
         {
             var param = new Dictionary<string, string>();
             param.Add("host_uid", uid.ToString());

@@ -12,7 +12,7 @@ namespace BiliBili_UWP.Models.UI.Converter
     {
         public object Convert(object value, Type targetType, object parameter, string language)
         {
-            var num = System.Convert.ToInt32(value);
+            var num = System.Convert.ToDouble(value);
             return AppTool.GetNumberAbbreviation(num);
         }
 

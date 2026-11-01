@@ -8,8 +8,8 @@ namespace BiliBili_Lib.Models.BiliBili
 {
     public class AnimeDynamic
     {
-        public int aid { get; set; }
-        public int cid { get; set; }
+        public long aid { get; set; }
+        public long cid { get; set; }
         public string cover { get; set; }
         public int duration { get; set; }
         public int episode_id { get; set; }

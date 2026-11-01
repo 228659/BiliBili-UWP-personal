@@ -72,7 +72,7 @@ namespace BiliBili_UWP.Components.Controls
                         cover.ExtraFlyout = instance.BangumiFlyout;
                     else
                         cover.ExtraFlyout = instance.VideoFlyout;
-                    var feedback = data.three_point_v2.Where(p => p.type == "feedback").FirstOrDefault();
+                    var feedback = data.three_point_v2?.FirstOrDefault(p => p.type == "feedback");
                     if (feedback != null)
                     {
                         instance.FeedbackItemsControl.Visibility = Visibility.Visible;
@@ -80,7 +80,7 @@ namespace BiliBili_UWP.Components.Controls
                     }
                     else
                         instance.FeedbackItemsControl.Visibility = Visibility.Collapsed;
-                    var notInterested = data.three_point_v2.Where(p => p.type == "dislike").FirstOrDefault();
+                    var notInterested = data.three_point_v2?.FirstOrDefault(p => p.type == "dislike");
                     if (notInterested != null)
                     {
                         instance.NotInterestedItemsControl.Visibility = Visibility.Visible;
@@ -95,15 +95,15 @@ namespace BiliBili_UWP.Components.Controls
                     card.Cover = data.cover;
                     card.Title = data.title;
                     card.Tip = data.desc;
-                    card.FirstSectionContent = data.cover_left_text_2.Replace("观看", "");
-                    card.SecondSectionContent = data.cover_left_text_3.Replace("弹幕", "");
+                    card.FirstSectionContent = data.cover_left_text_2?.Replace("观看", "") ?? "";
+                    card.SecondSectionContent = data.cover_left_text_3?.Replace("弹幕", "") ?? "";
                     card.Duration = data.cover_left_text_1;
                     card.RightBottomText = data.top_rcmd_reason ?? "";
                     if (data.card_goto == "bangumi")
                         card.ExtraFlyout = instance.BangumiFlyout;
                     else
                         card.ExtraFlyout = instance.VideoFlyout;
-                    var feedback = data.three_point_v2.Where(p => p.type == "feedback").FirstOrDefault();
+                    var feedback = data.three_point_v2?.FirstOrDefault(p => p.type == "feedback");
                     if (feedback != null)
                     {
                         instance.FeedbackItemsControl.Visibility = Visibility.Visible;
@@ -111,7 +111,7 @@ namespace BiliBili_UWP.Components.Controls
                     }
                     else
                         instance.FeedbackItemsControl.Visibility = Visibility.Collapsed;
-                    var notInterested = data.three_point_v2.Where(p => p.type == "dislike").FirstOrDefault();
+                    var notInterested = data.three_point_v2?.FirstOrDefault(p => p.type == "dislike");
                     if (notInterested != null)
                     {
                         instance.NotInterestedItemsControl.Visibility = Visibility.Visible;
@@ -126,7 +126,7 @@ namespace BiliBili_UWP.Components.Controls
 
         private async void LaterViewButton_Click(object sender, RoutedEventArgs e)
         {
-            await App.BiliViewModel.AddViewLater(sender, Convert.ToInt32(Data.args.aid));
+            await App.BiliViewModel.AddViewLater(sender, Data.args.aid);
         }
 
         private async void Dislike_Tapped(object sender, TappedRoutedEventArgs e)

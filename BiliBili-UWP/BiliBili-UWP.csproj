@@ -1027,6 +1027,9 @@
     <PackageReference Include="System.Reactive">
       <Version>4.4.1</Version>
     </PackageReference>
+    <PackageReference Include="ZXing.Net">
+      <Version>0.16.10</Version>
+    </PackageReference>
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\BiliBili-Controls\BiliBili-Controls.csproj">

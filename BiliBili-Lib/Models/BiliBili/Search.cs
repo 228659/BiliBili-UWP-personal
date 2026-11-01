@@ -61,27 +61,27 @@ namespace BiliBili_Lib.Models.BiliBili
         public string @goto { get; set; }
         public string uri { get; set; }
         public string cover { get; set; }
-        public int mid { get; set; }
+        public long mid { get; set; }
 
     }
     public class SearchVideo : SearchBase
     {
-        public int play { get; set; }
+        public long play { get; set; }
         public string author { get; set; }
         public string desc { get; set; }
         public string duration { get; set; }
         public string face { get; set; }
-        public int danmaku { get; set; }
+        public long danmaku { get; set; }
     }
     public class SearchDocument : SearchBase
     {
         public string name { get; set; }
-        public int play { get; set; }
+        public long play { get; set; }
         public string desc { get; set; }
         public int id { get; set; }
         public int template_id { get; set; }
         public List<string> image_urls { get; set; }
-        public int view { get; set; }
+        public long view { get; set; }
         public int like { get; set; }
         public int reply { get; set; }
         public string badge { get; set; }
@@ -94,14 +94,14 @@ namespace BiliBili_Lib.Models.BiliBili
         public string type { get; set; }
         public int attentions { get; set; }
         public int region { get; set; }
-        public int online { get; set; }
+        public long online { get; set; }
         public string badge { get; set; }
     }
 
     public class SearchUser : SearchBase
     {
         public string sign { get; set; }
-        public int fans { get; set; }
+        public long fans { get; set; }
         public string render_fans
         {
             get => AppTool.GetNumberAbbreviation(fans);

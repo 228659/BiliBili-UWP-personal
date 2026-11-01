@@ -49,8 +49,8 @@ namespace BiliBili_Lib.Models.BiliBili
         public string @goto { get; set; }
         public string name { get; set; }
         public string face { get; set; }
-        public int play { get; set; }
-        public int danmaku { get; set; }
+        public long play { get; set; }
+        public long danmaku { get; set; }
         public int reply { get; set; }
         public int favourite { get; set; }
         public int pubdate { get; set; }

@@ -106,6 +106,7 @@ namespace BiliBili_UWP.Models.Core
             AppTool.WriteLocalSetting(Settings.LastSeemDynamicId, "");
             BiliTool.ClearCookies();
             _client.Account = new AccountService(new TokenPackage());
+            _client.Account.TokenChanged += TokenChanged;
             BiliTool.ClearCookies();
         }
 

@@ -54,8 +54,8 @@ namespace BiliBili_UWP.Pages.Main
         private VideoService _videoService = App.BiliViewModel._client.Video;
         private ObservableCollection<VideoDetail> PlayBackupCollection = new ObservableCollection<VideoDetail>();
 
-        private int _currentPartId = 0;
-        private int videoId = 0;
+        private long _currentPartId = 0;
+        private long videoId = 0;
         private string bvId = "";
         public static VideoPage Current;
         private List<FavoriteItem> _tempFavorites = new List<FavoriteItem>();
@@ -81,15 +81,15 @@ namespace BiliBili_UWP.Pages.Main
                 App.AppViewModel.CurrentVideoPlayer = VideoPlayer;
                 App.AppViewModel.CurrentPlayerType = Models.Enums.PlayerType.Video;
                 PlayBackupCollection.Clear();
-                if (e.Parameter is Tuple<int, string> data)
+                if (e.Parameter is Tuple<long, string> data)
                 {
-                    int aid = data.Item1;
+                    long aid = data.Item1;
                     _fromSign = data.Item2;
                     videoId = aid;
                     PlayListContainer.Visibility = Visibility.Collapsed;
                     _isPlayList = false;
                 }
-                else if (e.Parameter is Tuple<int, List<VideoDetail>> videoList)
+                else if (e.Parameter is Tuple<long, List<VideoDetail>> videoList)
                 {
                     PlayListContainer.Visibility = Visibility.Visible;
                     videoList.Item2.ForEach(p => PlayBackupCollection.Add(p));
@@ -507,7 +507,7 @@ namespace BiliBili_UWP.Pages.Main
             await Refresh();
         }
 
-        private async void VideoPlayer_MediaEnded(object sender, int e)
+        private async void VideoPlayer_MediaEnded(object sender, long e)
         {
             if (_isPlayList)
             {

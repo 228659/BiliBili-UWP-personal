@@ -134,7 +134,7 @@ namespace BiliBili_Lib.Service
         /// <param name="cid">视频分Pid</param>
         /// <param name="qn">分辨率ID</param>
         /// <returns></returns>
-        public async Task<VideoPlayBase> GetBangumiPlayAsync(int type, int cid, int qn = 64)
+        public async Task<VideoPlayBase> GetBangumiPlayAsync(int type, long cid, int qn = 64)
         {
             var param = new Dictionary<string, string>();
             param.Add("module", "bangumi");
@@ -221,7 +221,7 @@ namespace BiliBili_Lib.Service
         /// </summary>
         /// <param name="aid">视频ID</param>
         /// <returns></returns>
-        public async Task AddVideoHistoryAsync(int aid,int cid, int epid, int seconds = 0,int sid=0)
+        public async Task AddVideoHistoryAsync(long aid,long cid, int epid, int seconds = 0,int sid=0)
         {
             var param = new Dictionary<string, string>();
             param.Add("aid", aid.ToString());

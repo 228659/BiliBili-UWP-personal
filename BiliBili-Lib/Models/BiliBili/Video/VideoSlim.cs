@@ -8,10 +8,10 @@ namespace BiliBili_Lib.Models.BiliBili.Video
 {
     public class VideoSlim
     {
-        public int aid { get; set; }
+        public long aid { get; set; }
         public string bvid { get; set; }
-        public int view { get; set; }
-        public int danmaku { get; set; }
+        public long view { get; set; }
+        public long danmaku { get; set; }
         public int reply { get; set; }
         public int favorite { get; set; }
         public int coin { get; set; }

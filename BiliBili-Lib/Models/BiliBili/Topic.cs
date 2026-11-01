@@ -35,11 +35,11 @@ namespace BiliBili_Lib.Models.BiliBili
 
     public class TopicOrigin
     {
-        public int uid { get; set; }
+        public long uid { get; set; }
         public int type { get; set; }
         public long rid { get; set; }
         public int acl { get; set; }
-        public int view { get; set; }
+        public long view { get; set; }
         public int repost { get; set; }
         public int like { get; set; }
         public long dynamic_id { get; set; }
@@ -60,11 +60,11 @@ namespace BiliBili_Lib.Models.BiliBili
 
     public class TopicDescription
     {
-        public int uid { get; set; }
+        public long uid { get; set; }
         public int type { get; set; }
         public string rid { get; set; }
         public int acl { get; set; }
-        public int view { get; set; }
+        public long view { get; set; }
         public int repost { get; set; }
         public int like { get; set; }
         public int comment { get; set; }

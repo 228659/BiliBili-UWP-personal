@@ -40,7 +40,7 @@ namespace BiliBili_UWP.Pages_Tablet.Main
                 return;
             if (e.Parameter != null)
             {
-                if (e.Parameter is int aid)
+                if (e.Parameter is long aid)
                 {
                     await InitVideo(aid, 0, "");
                 }
@@ -52,14 +52,14 @@ namespace BiliBili_UWP.Pages_Tablet.Main
                 {
                     await InitVideo(args.aid, args.cid, args.bvid);
                 }
-                else if(e.Parameter is Tuple<int,List<VideoDetail>> listData)
+                else if(e.Parameter is Tuple<long,List<VideoDetail>> listData)
                 {
                     await InitPlayList(listData.Item1, listData.Item2);
                 }
             }
             base.OnNavigatedTo(e);
         }
-        private async Task InitPlayList(int startId, List<VideoDetail> list)
+        private async Task InitPlayList(long startId, List<VideoDetail> list)
         {
             if (!Container.Children.Contains(_videoBlock))
             {
@@ -68,7 +68,7 @@ namespace BiliBili_UWP.Pages_Tablet.Main
             _videoBlock.Visibility = Visibility.Visible;
             await _videoBlock.Init(startId, list);
         }
-        private async Task InitVideo(int aid, int cid, string bvid)
+        private async Task InitVideo(long aid, long cid, string bvid)
         {
             if (!Container.Children.Contains(_videoBlock))
             {

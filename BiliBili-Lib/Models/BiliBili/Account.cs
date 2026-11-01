@@ -19,7 +19,7 @@ namespace BiliBili_Lib.Models.BiliBili
     }
     public class Me
     {
-        public int mid { get; set; }
+        public long mid { get; set; }
         public string name { get; set; }
         public string sign { get; set; }
         public double coins { get; set; }
@@ -79,7 +79,7 @@ namespace BiliBili_Lib.Models.BiliBili
 
     public class UserStat
     {
-        public int mid { get; set; }
+        public long mid { get; set; }
         public int following { get; set; }
         public int whisper { get; set; }
         public int black { get; set; }
@@ -87,7 +87,7 @@ namespace BiliBili_Lib.Models.BiliBili
     }
     public class SlimUserInfo
     {
-        public int uid { get; set; }
+        public long uid { get; set; }
         public string uname { get; set; }
         public string face { get; set; }
     }

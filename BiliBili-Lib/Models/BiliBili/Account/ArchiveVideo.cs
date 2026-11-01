@@ -25,8 +25,8 @@ namespace BiliBili_Lib.Models.BiliBili.Account
         public bool is_steins { get; set; }
         public bool is_ugcpay { get; set; }
         public bool is_cooperation { get; set; }
-        public int play { get; set; }
-        public int danmaku { get; set; }
+        public long play { get; set; }
+        public long danmaku { get; set; }
         public int ctime { get; set; }
         public int ugc_pay { get; set; }
         public string author { get; set; }

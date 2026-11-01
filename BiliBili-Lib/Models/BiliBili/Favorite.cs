@@ -20,7 +20,7 @@ namespace BiliBili_Lib.Models.BiliBili
         public string intro { get; set; }
         public int like_state { get; set; }
         public int media_count { get; set; }
-        public int mid { get; set; }
+        public long mid { get; set; }
         public int mtime { get; set; }
         public int state { get; set; }
         public string title { get; set; }
@@ -32,8 +32,8 @@ namespace BiliBili_Lib.Models.BiliBili
     {
         public int coin { get; set; }
         public int collect { get; set; }
-        public int danmaku { get; set; }
-        public int play { get; set; }
+        public long danmaku { get; set; }
+        public long play { get; set; }
         public int reply { get; set; }
         public int share { get; set; }
         public int thumb_down { get; set; }
@@ -43,7 +43,7 @@ namespace BiliBili_Lib.Models.BiliBili
     {
         public string face { get; set; }
         public int followed { get; set; }
-        public int mid { get; set; }
+        public long mid { get; set; }
         public string name { get; set; }
         public int vip_pay_type { get; set; }
         public int vip_statue { get; set; }

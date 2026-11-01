@@ -149,7 +149,7 @@ namespace BiliBili_UWP.Pages_Share.Sub.Channel
         private void VideoListView_ItemClick(object sender, ItemClickEventArgs e)
         {
             var data = e.ClickedItem as VideoRecommend;
-            App.AppViewModel.PlayVideo(Convert.ToInt32(data.param),null, "traffic.new-channel-detail-featured.0.0.0.0");
+            App.AppViewModel.PlayVideo(Convert.ToInt64(data.param),null, "traffic.new-channel-detail-featured.0.0.0.0");
         }
         private async void ScrollViewer_ViewChanged(object sender, ScrollViewerViewChangedEventArgs e)
         {
@@ -216,7 +216,7 @@ namespace BiliBili_UWP.Pages_Share.Sub.Channel
         private async void LaterViewButton_Click(object sender, RoutedEventArgs e)
         {
             var data = (sender as FrameworkElement).DataContext as VideoRecommend;
-            await App.BiliViewModel.AddViewLater(sender, Convert.ToInt32(data.param));
+            await App.BiliViewModel.AddViewLater(sender, Convert.ToInt64(data.param));
         }
 
         private void TopicListView_ContainerContentChanging(ListViewBase sender, ContainerContentChangingEventArgs args)

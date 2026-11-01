@@ -9,7 +9,7 @@ namespace BiliBili_Lib.Models.BiliBili.Video
 
     public class VideoPart
     {
-        public int cid { get; set; }
+        public long cid { get; set; }
         public int page { get; set; }
         public string from { get; set; }
         public string part { get; set; }

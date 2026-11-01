@@ -10,7 +10,7 @@ namespace BiliBili_Lib.Models.BiliBili.Video
     public class VideoDetail
     {
         public string bvid { get; set; }
-        public int aid { get; set; }
+        public long aid { get; set; }
         public int videos { get; set; }
         public long tid { get; set; }
         public string tname { get; set; }
@@ -27,7 +27,7 @@ namespace BiliBili_Lib.Models.BiliBili.Video
         public VideoOwner owner { get; set; }
         public VideoStat stat { get; set; }
         public string dynamic { get; set; }
-        public int cid { get; set; }
+        public long cid { get; set; }
         public bool no_cache { get; set; }
         public List<VideoPart> pages { get; set; }
         public VideoSubtitle subtitle { get; set; }
@@ -53,7 +53,7 @@ namespace BiliBili_Lib.Models.BiliBili.Video
 
         public class History
         {
-            public int cid { get; set; }
+            public long cid { get; set; }
             public int progress { get; set; }
         }
 
@@ -72,16 +72,16 @@ namespace BiliBili_Lib.Models.BiliBili.Video
     }
     public class VideoOwner
     {
-        public int mid { get; set; }
+        public long mid { get; set; }
         public string name { get; set; }
         public string face { get; set; }
     }
 
     public class VideoStat
     {
-        public int aid { get; set; }
-        public int view { get; set; }
-        public int danmaku { get; set; }
+        public long aid { get; set; }
+        public long view { get; set; }
+        public long danmaku { get; set; }
         public int reply { get; set; }
         public int favorite { get; set; }
         public int coin { get; set; }
@@ -110,10 +110,10 @@ namespace BiliBili_Lib.Models.BiliBili.Video
 
     public class VideoRelated
     {
-        public int aid { get; set; }
+        public long aid { get; set; }
         public string pic { get; set; }
         public string title { get; set; }
-        public int cid { get; set; }
+        public long cid { get; set; }
         public int duration { get; set; }
         public VideoOwner owner { get; set; }
         public VideoStat stat { get; set; }
@@ -134,7 +134,7 @@ namespace BiliBili_Lib.Models.BiliBili.Video
     {
         public int node_id { get; set; }
         public string title { get; set; }
-        public int cid { get; set; }
+        public long cid { get; set; }
     }
 
 

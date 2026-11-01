@@ -368,7 +368,7 @@ namespace BiliBili_UWP.Pages_Share.Sub
         private void VideoListView_ItemClick(object sender, ItemClickEventArgs e)
         {
             var video = e.ClickedItem as SearchVideo;
-            App.AppViewModel.PlayVideo(Convert.ToInt32(video.param));
+            App.AppViewModel.PlayVideo(Convert.ToInt64(video.param));
         }
 
         private void UserListView_ItemClick(object sender, ItemClickEventArgs e)

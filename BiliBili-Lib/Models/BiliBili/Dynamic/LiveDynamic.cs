@@ -9,7 +9,7 @@ namespace BiliBili_Lib.Models.BiliBili
     public class LiveDynamic
     {
         public int roomid { get; set; }
-        public int uid { get; set; }
+        public long uid { get; set; }
         public string uname { get; set; }
         public string verify { get; set; }
         public int _virtual { get; set; }
@@ -23,7 +23,7 @@ namespace BiliBili_Lib.Models.BiliBili
         public string hidden_status { get; set; }
         public string user_cover { get; set; }
         public int short_id { get; set; }
-        public int online { get; set; }
+        public long online { get; set; }
         public int area { get; set; }
         public int area_v2_id { get; set; }
         public int area_v2_parent_id { get; set; }

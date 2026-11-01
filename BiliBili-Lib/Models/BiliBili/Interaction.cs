@@ -40,7 +40,7 @@ namespace BiliBili_Lib.Models.BiliBili
         public string platform_action { get; set; }
         public string native_action { get; set; }
         public string condition { get; set; }
-        public int cid { get; set; }
+        public long cid { get; set; }
         public string option { get; set; }
         public int is_default { get; set; }
     }
@@ -52,8 +52,8 @@ namespace BiliBili_Lib.Models.BiliBili
 
     public class PreloadVideo
     {
-        public int aid { get; set; }
-        public int cid { get; set; }
+        public long aid { get; set; }
+        public long cid { get; set; }
     }
 
     public class StoryItem
@@ -61,7 +61,7 @@ namespace BiliBili_Lib.Models.BiliBili
         public int node_id { get; set; }
         public int edge_id { get; set; }
         public string title { get; set; }
-        public int cid { get; set; }
+        public long cid { get; set; }
         public int start_pos { get; set; }
         public string cover { get; set; }
         public int is_current { get; set; }

@@ -132,8 +132,8 @@ namespace BiliBili_UWP.Pages.Main
 
         private async void RemoveItem_Click(object sender, RoutedEventArgs e)
         {
-            var aid = Convert.ToInt32((sender as AppBarButton).Tag);
-            bool result = await _account.DeleteViewLaterAsync(Convert.ToInt32(aid));
+            var aid = Convert.ToInt64((sender as AppBarButton).Tag);
+            bool result = await _account.DeleteViewLaterAsync(aid);
             if (result)
             {
                 ViewLaterCollection.Remove(ViewLaterCollection.Where(p => p.aid == aid).FirstOrDefault());

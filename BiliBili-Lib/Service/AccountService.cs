@@ -23,6 +23,16 @@ using Windows.UI.Xaml.Media.Imaging;
 
 namespace BiliBili_Lib.Service
 {
+    public class TvLoginQrResult
+    {
+        public string Url { get; set; }
+        public string AuthCode { get; set; }
+    }
+    public class TvLoginPollResult
+    {
+        public int Code { get; set; }
+        public string Message { get; set; }
+    }
     public class AccountService
     {
         public string _accessToken;
@@ -160,6 +170,79 @@ namespace BiliBili_Lib.Service
             }
         }
         /// <summary>
+        /// 获取TV登录二维码
+        /// </summary>
+        /// <returns></returns>
+        public async Task<TvLoginQrResult> GetTvLoginQrAsync()
+        {
+            try
+            {
+                var param = new Dictionary<string, string>
+                {
+                    { "appkey", BiliTool.AndroidKey.Appkey },
+                    { "local_id", "0" },
+                    { "ts", AppTool.GetNowSeconds().ToString() }
+                };
+                var response = await BiliTool.PostContentToWebAsync(Api.PASSPORT_TV_LOGIN_QRCODE, BuildTvLoginParam(param));
+                if (string.IsNullOrEmpty(response))
+                    return null;
+                var jobj = JObject.Parse(response);
+                if (Convert.ToInt32(jobj["code"]) != 0)
+                    return null;
+                return new TvLoginQrResult
+                {
+                    Url = jobj["data"]["url"].ToString(),
+                    AuthCode = jobj["data"]["auth_code"].ToString()
+                };
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+        /// <summary>
+        /// 轮询TV登录状态，成功后写入令牌
+        /// </summary>
+        /// <param name="authCode">二维码标识</param>
+        /// <returns></returns>
+        public async Task<TvLoginPollResult> PollTvLoginAsync(string authCode)
+        {
+            try
+            {
+                var param = new Dictionary<string, string>
+                {
+                    { "appkey", BiliTool.AndroidKey.Appkey },
+                    { "auth_code", authCode },
+                    { "local_id", "0" },
+                    { "ts", AppTool.GetNowSeconds().ToString() }
+                };
+                var response = await BiliTool.PostContentToWebAsync(Api.PASSPORT_TV_LOGIN_POLL, BuildTvLoginParam(param));
+                if (string.IsNullOrEmpty(response))
+                    return null;
+                var jobj = JObject.Parse(response);
+                int code = Convert.ToInt32(jobj["code"]);
+                var result = new TvLoginPollResult { Code = code, Message = jobj["message"]?.ToString() };
+                if (code == 0)
+                {
+                    var data = jobj["data"];
+                    var package = new TokenPackage(data["access_token"].ToString(), data["refresh_token"].ToString(), AppTool.DateToTimeStamp(DateTime.Now.AddSeconds(Convert.ToInt32(data["expires_in"]))));
+                    InitToken(package);
+                    TokenChanged?.Invoke(this, package);
+                    await SSO();
+                }
+                return result;
+            }
+            catch (Exception)
+            {
+                return null;
+            }
+        }
+        private string BuildTvLoginParam(Dictionary<string, string> param)
+        {
+            var query = string.Join("&", param.Select(p => $"{p.Key}={p.Value}"));
+            return query + "&sign=" + BiliTool.GetSign(query);
+        }
+        /// <summary>
         /// 刷新令牌
         /// </summary>
         /// <returns></returns>
@@ -234,6 +317,8 @@ namespace BiliBili_Lib.Service
         {
             var url = BiliTool.UrlContact(Api.ACCOUNT_MINE, hasAccessKey: true);
             var data = await BiliTool.ConvertEntityFromWebAsync<Me>(url);
+            if (data == null)
+                return null;
             Me = data;
             BiliTool.mid = _userId = data.mid.ToString();
             return data;
@@ -243,7 +328,7 @@ namespace BiliBili_Lib.Service
         /// </summary>
         /// <param name="uid">用户ID</param>
         /// <returns></returns>
-        public async Task<bool> FollowUser(int uid)
+        public async Task<bool> FollowUser(long uid)
         {
             var param = new Dictionary<string, string>();
             param.Add("uid", Me.mid.ToString());
@@ -262,7 +347,7 @@ namespace BiliBili_Lib.Service
         /// </summary>
         /// <param name="uid">用户ID</param>
         /// <returns></returns>
-        public async Task<bool> UnfollowUser(int uid)
+        public async Task<bool> UnfollowUser(long uid)
         {
             var param = new Dictionary<string, string>();
             param.Add("uid", Me.mid.ToString());
@@ -304,7 +389,7 @@ namespace BiliBili_Lib.Service
         /// </summary>
         /// <param name="aids">视频ID组</param>
         /// <returns></returns>
-        public async Task<bool> DeleteHistoryAsync(params int[] aids)
+        public async Task<bool> DeleteHistoryAsync(params long[] aids)
         {
             var param = new Dictionary<string, string>();
             param.Add("aid", string.Join(',', aids));
@@ -357,7 +442,7 @@ namespace BiliBili_Lib.Service
         /// <param name="uid">用户ID</param>
         /// <param name="pn">页码</param>
         /// <returns></returns>
-        public async Task<List<FavoriteItem>> GetFavoritesAsync(int uid,int pn=1)
+        public async Task<List<FavoriteItem>> GetFavoritesAsync(long uid,int pn=1)
         {
             var param = new Dictionary<string, string>();
             param.Add("up_mid", uid.ToString());
@@ -373,7 +458,7 @@ namespace BiliBili_Lib.Service
         /// <param name="uid">用户ID</param>
         /// <param name="pn">页码</param>
         /// <returns></returns>
-        public async Task<List<FavoriteItem>> GetCollectListAsync(int uid,int pn=1)
+        public async Task<List<FavoriteItem>> GetCollectListAsync(long uid,int pn=1)
         {
             var param = new Dictionary<string, string>();
             param.Add("up_mid", uid.ToString());
@@ -489,7 +574,7 @@ namespace BiliBili_Lib.Service
         /// </summary>
         /// <param name="aid">视频ID</param>
         /// <returns></returns>
-        public async Task<bool> AddViewLaterAsync(int aid)
+        public async Task<bool> AddViewLaterAsync(long aid)
         {
             var param = new Dictionary<string, string>();
             param.Add("aid", aid.ToString());
@@ -507,7 +592,7 @@ namespace BiliBili_Lib.Service
         /// </summary>
         /// <param name="aids">视频ID组</param>
         /// <returns></returns>
-        public async Task<bool> DeleteViewLaterAsync(params int[] aids)
+        public async Task<bool> DeleteViewLaterAsync(params long[] aids)
         {
             var param = new Dictionary<string, string>();
             param.Add("aid", string.Join(',', aids));
@@ -526,7 +611,7 @@ namespace BiliBili_Lib.Service
         /// </summary>
         /// <param name="uid">用户ID</param>
         /// <returns></returns>
-        public async Task<UserResponse> GetUserSpaceAsync(int uid)
+        public async Task<UserResponse> GetUserSpaceAsync(long uid)
         {
             var param = new Dictionary<string, string>();
             param.Add("vmid", uid.ToString());
@@ -541,7 +626,7 @@ namespace BiliBili_Lib.Service
         /// <param name="uid">用户ID</param>
         /// <param name="page">页码</param>
         /// <returns></returns>
-        public async Task<ArchiveResponse> GetUserArchiveAsync(int uid, int page)
+        public async Task<ArchiveResponse> GetUserArchiveAsync(long uid, int page)
         {
             var param = new Dictionary<string, string>();
             param.Add("vmid", uid.ToString());
@@ -624,7 +709,7 @@ namespace BiliBili_Lib.Service
         /// <param name="videoType">视频类型</param>
         /// <param name="listId">收藏夹ID</param>
         /// <returns></returns>
-        public async Task<bool> RemoveFavoriteVideoAsync(int aid, int videoType, int listId)
+        public async Task<bool> RemoveFavoriteVideoAsync(long aid, int videoType, int listId)
         {
             var param = new Dictionary<string, string>();
             param.Add("media_id", listId.ToString());

@@ -40,7 +40,7 @@ namespace BiliBili_UWP.Pages.Main
         {
             if (e.Parameter != null)
             {
-                if (e.Parameter is Tuple<VideoDetail, int> data)
+                if (e.Parameter is Tuple<VideoDetail, long> data)
                     await VideoPlayer.Init(data.Item1, data.Item2);
                 else if (e.Parameter is Tuple<BangumiDetail, Episode> bangu)
                     await VideoPlayer.Init(bangu.Item1, bangu.Item2);

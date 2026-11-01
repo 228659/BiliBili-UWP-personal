@@ -154,7 +154,7 @@ namespace BiliBili_UWP.Pages_Share.Sub.Video
         {
             var item = e.ClickedItem as RegionVideo;
             if(item.@goto=="av")
-                App.AppViewModel.PlayVideo(Convert.ToInt32(item.param));
+                App.AppViewModel.PlayVideo(Convert.ToInt64(item.param));
             else if (item.@goto == "bangumi")
             {
                 var sp = item.uri.Split("#");
@@ -189,7 +189,7 @@ namespace BiliBili_UWP.Pages_Share.Sub.Video
         public class TempVideoStore
         {
             public int rid { get; set; }
-            public int ctime { get; set; }
+            public long ctime { get; set; }
             public ObservableCollection<RegionVideo> videos { get; set; }
             public TempVideoStore(int r)
             {

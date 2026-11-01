@@ -81,10 +81,10 @@ namespace BiliBili_Lib.Models.BiliBili
 
     public class Stat
     {
-        public int danmaku { get; set; }
+        public long danmaku { get; set; }
         public int follow { get; set; }
         public string follow_view { get; set; }
-        public int view { get; set; }
+        public long view { get; set; }
     }
 
     public class Status

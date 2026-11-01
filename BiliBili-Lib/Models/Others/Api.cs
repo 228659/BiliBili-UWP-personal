@@ -44,6 +44,14 @@ namespace BiliBili_Lib.Models.Others
         /// 获取验证码
         /// </summary>
         public const string PASSPORT_CAPTCHA = _passBase + "/captcha";
+        /// <summary>
+        /// 获取TV登录二维码
+        /// </summary>
+        public const string PASSPORT_TV_LOGIN_QRCODE = _passBase + "/x/passport-tv-login/qrcode/auth_code";
+        /// <summary>
+        /// 轮询TV登录状态
+        /// </summary>
+        public const string PASSPORT_TV_LOGIN_POLL = _passBase + "/x/passport-tv-login/qrcode/poll";
         #endregion
 
         #region 分区 Region

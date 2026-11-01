@@ -15,7 +15,7 @@ namespace BiliBili_Lib.Models.BiliBili
         public NewEp new_ep { get; set; }
         public string subtitle { get; set; }
         public string title { get; set; }
-        public int up_id { get; set; }
+        public long up_id { get; set; }
         public UpInfo up_info { get; set; }
         public int update_count { get; set; }
         public string url { get; set; }

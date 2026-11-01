@@ -73,8 +73,8 @@ namespace BiliBili_UWP.Components.Controls
         private InteractionVideo _interaction = null;
         private bool _isMediaElementLoaded = false;
 
-        private int _videoId = 0;
-        private int _partId = 0;
+        private long _videoId = 0;
+        private long _partId = 0;
         private Episode _bangumiPart = null;
         private VideoDetail _videoDetail = null;
         private BangumiDetail _bangumiDetail = null;
@@ -135,7 +135,7 @@ namespace BiliBili_UWP.Components.Controls
         public event EventHandler<bool> CompactOverlayChanged;
         public event RoutedEventHandler SeparateButtonClick;
         public event EventHandler MTCLoaded;
-        public event EventHandler<int> MediaEnded;
+        public event EventHandler<long> MediaEnded;
         public event EventHandler<int> PartSwitched;
         public event EventHandler PreviousVideoRequest;
         public event EventHandler NextVideoRequest;
@@ -162,7 +162,7 @@ namespace BiliBili_UWP.Components.Controls
         }
 
         #region 加载
-        public async Task Init(VideoDetail detail, int cid = 0)
+        public async Task Init(VideoDetail detail, long cid = 0)
         {
             _videoDetail = detail;
             _videoId = detail.aid;
@@ -487,7 +487,7 @@ namespace BiliBili_UWP.Components.Controls
         #endregion
 
         #region 播放及刷新
-        public async Task RefreshVideoSource(int partId, int progress = 0, bool needRefresh = false)
+        public async Task RefreshVideoSource(long partId, int progress = 0, bool needRefresh = false)
         {
             LoadingBar.Visibility = Visibility.Visible;
             if (needRefresh)
@@ -701,7 +701,7 @@ namespace BiliBili_UWP.Components.Controls
             SetFocus();
             LoadingBar.Visibility = Visibility.Collapsed;
         }
-        private async Task InitInteraction(int cid, int edgeId)
+        private async Task InitInteraction(long cid, int edgeId)
         {
             if (_isChoiceHandling)
                 return;
@@ -1337,7 +1337,7 @@ namespace BiliBili_UWP.Components.Controls
                 source = await _videoService.CreateMediaSourceAsync(video, audio);
             return source;
         }
-        private async Task<MediaSource> HandleFlvSource(int videoId, bool isBangumi = false)
+        private async Task<MediaSource> HandleFlvSource(long videoId, bool isBangumi = false)
         {
             var playList = new Playlist(PlaylistTypes.NetworkHttp);
             var data = _playData as VideoPlayFlv;

@@ -8,8 +8,8 @@ namespace BiliBili_UWP.Models.UI.Others
 {
     public class VideoActiveArgs
     {
-        public int aid { get; set; }
+        public long aid { get; set; }
         public string bvid { get; set; }
-        public int cid { get; set; }
+        public long cid { get; set; }
     }
 }

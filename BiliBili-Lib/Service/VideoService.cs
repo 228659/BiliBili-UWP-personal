@@ -39,7 +39,7 @@ namespace BiliBili_Lib.Service
         /// <param name="rid">分区ID</param>
         /// <param name="ctime">偏移值</param>
         /// <returns></returns>
-        public async Task<Tuple<int, List<RegionVideo>>> GetSubRegionDefaultAsync(int rid, int ctime = 0)
+        public async Task<Tuple<long, List<RegionVideo>>> GetSubRegionDefaultAsync(int rid, long ctime = 0)
         {
             var param = new Dictionary<string, string>();
             param.Add("rid", rid.ToString());
@@ -68,7 +68,7 @@ namespace BiliBili_Lib.Service
                     var news = JsonConvert.DeserializeObject<List<RegionVideo>>(jobj["new"].ToString());
                     news.ForEach(p => list.Add(p));
                 }
-                var result = new Tuple<int, List<RegionVideo>>(Convert.ToInt32(jobj["cbottom"]), list);
+                var result = new Tuple<long, List<RegionVideo>>(Convert.ToInt64(jobj["cbottom"]), list);
                 return result;
             }
             return null;
@@ -101,11 +101,15 @@ namespace BiliBili_Lib.Service
             var param = new Dictionary<string, string>();
             param.Add("rid", rid.ToString());
             param.Add("day", "3");
-            param.Add("type", "1");
-            param.Add("arc_type", "0");
-            string url = BiliTool.UrlContact(Api.REGION_TOTAL_RANK, param, true);
-            var data = await BiliTool.ConvertEntityFromWebAsync<List<WebVideo>>(url,"data.list");
-            return data;
+            if (rid == 0)
+            {
+                param.Add("type", "1");
+                param.Add("arc_type", "0");
+                string totalUrl = BiliTool.UrlContact(Api.REGION_TOTAL_RANK, param, true);
+                return await BiliTool.ConvertEntityFromWebAsync<List<WebVideo>>(totalUrl, "data.list");
+            }
+            string url = BiliTool.UrlContact(Api.REGION_PART_RANK, param, true);
+            return await BiliTool.ConvertEntityFromWebAsync<List<WebVideo>>(url, "data");
         }
         /// <summary>
         /// 加载默认的分区内容
@@ -113,7 +117,7 @@ namespace BiliBili_Lib.Service
         /// <param name="rid">分区ID</param>
         /// <param name="ctime">偏移值</param>
         /// <returns></returns>
-        public async Task<Tuple<List<RegionBanner>, int, List<RegionVideo>>> GetRegionSquareAsync(int rid, int ctime = 0)
+        public async Task<Tuple<List<RegionBanner>, long, List<RegionVideo>>> GetRegionSquareAsync(int rid, long ctime = 0)
         {
             var param = new Dictionary<string, string>();
             param.Add("rid", rid.ToString());
@@ -148,7 +152,7 @@ namespace BiliBili_Lib.Service
                     var news = JsonConvert.DeserializeObject<List<RegionVideo>>(jobj["new"].ToString());
                     news.ForEach(p => list.Add(p));
                 }
-                var result = new Tuple<List<RegionBanner>, int, List<RegionVideo>>(banner, Convert.ToInt32(jobj["cbottom"]), list);
+                var result = new Tuple<List<RegionBanner>, long, List<RegionVideo>>(banner, Convert.ToInt64(jobj["cbottom"]), list);
                 return result;
             }
             return null;
@@ -159,7 +163,7 @@ namespace BiliBili_Lib.Service
         /// </summary>
         /// <param name="aid">视频avid</param>
         /// <returns></returns>
-        public async Task<List<VideoPart>> GetVideoPartsAsync(int aid)
+        public async Task<List<VideoPart>> GetVideoPartsAsync(long aid)
         {
             var param = new Dictionary<string, string>();
             param.Add("aid", aid.ToString());
@@ -172,7 +176,7 @@ namespace BiliBili_Lib.Service
         /// </summary>
         /// <param name="aid">视频avid</param>
         /// <returns></returns>
-        public async Task<VideoDetail> GetVideoDetailAsync(int aid,string fromSign="",string bvId="")
+        public async Task<VideoDetail> GetVideoDetailAsync(long aid,string fromSign="",string bvId="")
         {
             var param = new Dictionary<string, string>();
             if (aid > 0)
@@ -189,7 +193,7 @@ namespace BiliBili_Lib.Service
         /// </summary>
         /// <param name="aid">视频avid</param>
         /// <returns></returns>
-        public async Task<VideoSlim> GetVideoSlimAsync(int aid)
+        public async Task<VideoSlim> GetVideoSlimAsync(long aid)
         {
             var param = new Dictionary<string, string>();
             param.Add("aid", aid.ToString());
@@ -202,7 +206,7 @@ namespace BiliBili_Lib.Service
         /// </summary>
         /// <param name="aid">视频avid</param>
         /// <returns></returns>
-        public async Task<List<VideoDetail>> GetVideoRelatedAsync(int aid)
+        public async Task<List<VideoDetail>> GetVideoRelatedAsync(long aid)
         {
             var param = new Dictionary<string, string>();
             param.Add("aid", aid.ToString());
@@ -218,7 +222,7 @@ namespace BiliBili_Lib.Service
         /// <param name="cid">视频分Pid</param>
         /// <param name="qn">分辨率ID</param>
         /// <returns></returns>
-        public async Task<VideoPlayBase> GetVideoPlayAsync(int aid, int cid, int qn = 64)
+        public async Task<VideoPlayBase> GetVideoPlayAsync(long aid, long cid, int qn = 64)
         {
             var param = new Dictionary<string, string>();
             param.Add("avid", aid.ToString());
@@ -308,7 +312,7 @@ namespace BiliBili_Lib.Service
         /// <param name="aid">视频ID</param>
         /// <param name="type">检查类型</param>
         /// <returns></returns>
-        public async Task<bool> CheckVideoStatusAsync(int aid, string type = "like")
+        public async Task<bool> CheckVideoStatusAsync(long aid, string type = "like")
         {
             var param = new Dictionary<string, string>();
             param.Add("aid", aid.ToString());
@@ -346,7 +350,7 @@ namespace BiliBili_Lib.Service
         /// <param name="aid">视频ID</param>
         /// <param name="isLike">是否点赞</param>
         /// <returns></returns>
-        public async Task<bool> LikeVideoAsync(int aid, bool isLike)
+        public async Task<bool> LikeVideoAsync(long aid, bool isLike)
         {
             string is_like = isLike ? "0" : "1";
             var param = new Dictionary<string, string>();
@@ -368,7 +372,7 @@ namespace BiliBili_Lib.Service
         /// <param name="coin">投币数量</param>
         /// <param name="isLike">是否同时点赞</param>
         /// <returns></returns>
-        public async Task<bool> GiveCoinToVideoAsync(int aid, int coin, bool isLike)
+        public async Task<bool> GiveCoinToVideoAsync(long aid, int coin, bool isLike)
         {
             string is_like = isLike ? "1" : "0";
             var param = new Dictionary<string, string>();
@@ -389,7 +393,7 @@ namespace BiliBili_Lib.Service
         /// <param name="aid">视频ID</param>
         /// <param name="uid">用户ID</param>
         /// <returns></returns>
-        public async Task<List<FavoriteItem>> GetFavoritesAsync(int aid, int uid)
+        public async Task<List<FavoriteItem>> GetFavoritesAsync(long aid, long uid)
         {
             var param = new Dictionary<string, string>();
             param.Add("up_mid", uid.ToString());
@@ -407,7 +411,7 @@ namespace BiliBili_Lib.Service
         /// <param name="addIds">添加的收藏夹ID列表</param>
         /// <param name="delIds">移出的收藏夹ID列表</param>
         /// <returns></returns>
-        public async Task<bool> AddVideoToFavoriteAsync(int aid, List<string> addIds, List<string> delIds)
+        public async Task<bool> AddVideoToFavoriteAsync(long aid, List<string> addIds, List<string> delIds)
         {
             if (addIds.Count == 0 && delIds.Count == 0)
                 return false;
@@ -431,7 +435,7 @@ namespace BiliBili_Lib.Service
         /// </summary>
         /// <param name="aid">视频ID</param>
         /// <returns></returns>
-        public async Task<bool> TripleVideoAsync(int aid)
+        public async Task<bool> TripleVideoAsync(long aid)
         {
             var param = new Dictionary<string, string>();
             param.Add("aid", aid.ToString());
@@ -448,7 +452,7 @@ namespace BiliBili_Lib.Service
         /// </summary>
         /// <param name="aid">视频ID</param>
         /// <returns></returns>
-        public async Task AddVideoHistoryAsync(int aid, int cid, int seconds = 0)
+        public async Task AddVideoHistoryAsync(long aid, long cid, int seconds = 0)
         {
             var param = new Dictionary<string, string>();
             param.Add("aid", aid.ToString());
@@ -466,7 +470,7 @@ namespace BiliBili_Lib.Service
         /// <param name="graphVersion">标识值</param>
         /// <param name="edgeId">选项ID</param>
         /// <returns></returns>
-        public async Task<InteractionVideo> GetInteractionVideoAsync(int aid, int graphVersion, int edgeId = 0)
+        public async Task<InteractionVideo> GetInteractionVideoAsync(long aid, int graphVersion, int edgeId = 0)
         {
             var param = new Dictionary<string, string>();
             param.Add("aid", aid.ToString());
@@ -488,7 +492,7 @@ namespace BiliBili_Lib.Service
         /// <param name="fontSize">文本大小</param>
         /// <param name="mode">模式</param>
         /// <returns></returns>
-        public async Task<bool> SendDanmakuAsync(string message,int aid, int cid, double progress,string color,string fontSize,string mode)
+        public async Task<bool> SendDanmakuAsync(string message,long aid, long cid, double progress,string color,string fontSize,string mode)
         {
             var param = new Dictionary<string, string>();
             param.Add("aid", aid.ToString());
@@ -547,7 +551,7 @@ namespace BiliBili_Lib.Service
         /// <param name="aid">视频ID</param>
         /// <param name="cid">分PID</param>
         /// <returns></returns>
-        public async Task<List<SubtitleIndexItem>> GetVideoSubtitleIndexAsync(int aid,int cid)
+        public async Task<List<SubtitleIndexItem>> GetVideoSubtitleIndexAsync(long aid,long cid)
         {
             var param = new Dictionary<string, string>();
             param.Add("id", $"cid:{cid}");
@@ -582,7 +586,7 @@ namespace BiliBili_Lib.Service
         /// <param name="videoId">视频ID</param>
         /// <param name="atIds">At的人</param>
         /// <returns></returns>
-        public async Task<bool> RepostVideoAsync(string content, int videoId, List<RepostLocation> atIds)
+        public async Task<bool> RepostVideoAsync(string content, long videoId, List<RepostLocation> atIds)
         {
             var param = new Dictionary<string, string>();
             param.Add("content", Uri.EscapeDataString(content));

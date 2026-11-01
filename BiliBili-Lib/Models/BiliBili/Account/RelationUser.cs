@@ -9,7 +9,7 @@ namespace BiliBili_Lib.Models.BiliBili.Account
 {
     public class RelationUser
     {
-        public int mid { get; set; }
+        public long mid { get; set; }
         public string uname { get; set; }
         public string face { get; set; }
         public string sign { get; set; }

@@ -40,7 +40,7 @@ namespace BiliBili_UWP.Pages.Main
         private VideoService _regionService = App.BiliViewModel._client.Video;
         private RegionContainer _region;
         private bool _isRecommendRequesting = false;
-        private int ctime = 0;
+        private long ctime = 0;
         private double _scrollOffset = 0;
         public RegionPage()
         {
@@ -92,15 +92,20 @@ namespace BiliBili_UWP.Pages.Main
             _isRecommendRequesting = true;
             var square = await _regionService.GetRegionSquareAsync(_region.tid, ctime);
             var rank = await _regionService.GetRegionRankAsync(_region.tid);
-            if (square.Item1 != null)
+            if (square != null)
             {
-                square.Item1.ForEach(p => BannerCollection.Add(p));
-                BannerContainer.Visibility = BannerCollection.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
-            }
-            ctime = square.Item2;
-            if (square.Item3 != null && square.Item3.Count > 0)
-            {
-                square.Item3.ForEach(p => VideoCollection.Add(p));
+                if (square.Item1 != null)
+                {
+                    square.Item1.ForEach(p => BannerCollection.Add(p));
+                    BannerContainer.Visibility = BannerCollection.Count == 0 ? Visibility.Collapsed : Visibility.Visible;
+                }
+                ctime = square.Item2;
+                if (square.Item3 != null && square.Item3.Count > 0)
+                {
+                    square.Item3.ForEach(p => VideoCollection.Add(p));
+                }
+                else
+                    HolderText.Visibility = Visibility.Visible;
             }
             else
                 HolderText.Visibility = Visibility.Visible;
@@ -126,10 +131,13 @@ namespace BiliBili_UWP.Pages.Main
             _isRecommendRequesting = true;
             VideoLoadingBar.Visibility = Visibility.Visible;
             var videos = await _regionService.GetRegionSquareAsync(_region.tid, ctime);
-            ctime = videos.Item2;
-            if (videos.Item3 != null && videos.Item3.Count > 0)
+            if (videos != null)
             {
-                videos.Item3.ForEach(p => VideoCollection.Add(p));
+                ctime = videos.Item2;
+                if (videos.Item3 != null && videos.Item3.Count > 0)
+                {
+                    videos.Item3.ForEach(p => VideoCollection.Add(p));
+                }
             }
             VideoLoadingBar.Visibility = Visibility.Collapsed;
             _isRecommendRequesting = false;
@@ -145,7 +153,7 @@ namespace BiliBili_UWP.Pages.Main
         {
             var video = e.ClickedItem as RegionVideo;
             var ele = RecommendVideoView.ContainerFromItem(video);
-            App.AppViewModel.PlayVideo(Convert.ToInt32(video.param),ele);
+            App.AppViewModel.PlayVideo(Convert.ToInt64(video.param),ele);
         }
 
         private void RankContainer_ItemClick(object sender, ItemClickEventArgs e)
@@ -153,7 +161,7 @@ namespace BiliBili_UWP.Pages.Main
             var video = e.ClickedItem as WebVideo;
             var view = sender as ListView;
             var ele = view.ContainerFromItem(video);
-            App.AppViewModel.PlayVideo(Convert.ToInt32(video.aid),ele);
+            App.AppViewModel.PlayVideo(Convert.ToInt64(video.aid),ele);
         }
         private void ScrollViewerChanged()
         {

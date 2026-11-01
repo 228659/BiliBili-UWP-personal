@@ -38,7 +38,7 @@ namespace BiliBili_UWP.Pages_Share.Sub.Account
         private ObservableCollection<Topic> DynamicCollection = new ObservableCollection<Topic>();
         private AccountService _accountService = App.BiliViewModel._client.Account;
         private TopicService _topicService = App.BiliViewModel._client.Topic;
-        private int _uid = 0;
+        private long _uid = 0;
         private User _user = null;
         private bool _isVideoRequesting = false;
         private bool _isDynamicRequesting = false;
@@ -59,7 +59,7 @@ namespace BiliBili_UWP.Pages_Share.Sub.Account
                 return;
             if(e.Parameter!=null)
             {
-                if(e.Parameter is int uid)
+                if(e.Parameter is long uid)
                 {
                     if (_uid != uid)
                     {
@@ -67,7 +67,7 @@ namespace BiliBili_UWP.Pages_Share.Sub.Account
                         await Refresh();
                     }
                 }
-                else if(e.Parameter is Tuple<int,bool> pack)
+                else if(e.Parameter is Tuple<long,bool> pack)
                 {
                     if (_uid != pack.Item1)
                     {
@@ -162,11 +162,11 @@ namespace BiliBili_UWP.Pages_Share.Sub.Account
                 bool result = false;
                 if (_user.relation.is_follow == 1)
                 {
-                    result = await _accountService.UnfollowUser(Convert.ToInt32(_user.mid));
+                    result = await _accountService.UnfollowUser(Convert.ToInt64(_user.mid));
                 }
                 else
                 {
-                    result = await _accountService.FollowUser(Convert.ToInt32(_user.mid));
+                    result = await _accountService.FollowUser(Convert.ToInt64(_user.mid));
                 }
                 if (result)
                 {
@@ -299,7 +299,7 @@ namespace BiliBili_UWP.Pages_Share.Sub.Account
                 if (ana.Type == BiliBili_Lib.Enums.UriType.Bangumi)
                     App.AppViewModel.PlayBangumi(Convert.ToInt32(ana.Param), null, true);
                 else
-                    App.AppViewModel.PlayVideo(Convert.ToInt32(data.param));
+                    App.AppViewModel.PlayVideo(Convert.ToInt64(data.param));
             }
             else if (data.@goto == "bangumi")
                 App.AppViewModel.PlayBangumi(Convert.ToInt32(data.param), null, true);

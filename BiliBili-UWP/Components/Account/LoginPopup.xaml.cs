@@ -1,76 +1,52 @@
-﻿using BiliBili_Lib.Enums;
-using BiliBili_Lib.Tools;
-using BiliBili_UWP.Components.Widgets;
+﻿using BiliBili_UWP.Components.Widgets;
 using BiliBili_UWP.Models.UI;
 using BiliBili_UWP.Models.UI.Interface;
-using Newtonsoft.Json.Linq;
 using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
-using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Windows.Foundation;
-using Windows.Foundation.Collections;
-using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
-using Windows.UI.Xaml.Controls.Primitives;
-using Windows.UI.Xaml.Data;
-using Windows.UI.Xaml.Input;
-using Windows.UI.Xaml.Media;
-using Windows.UI.Xaml.Navigation;
+using Windows.UI.Xaml.Media.Imaging;
+using ZXing;
+using ZXing.QrCode;
+using ZXing.Rendering;
 
 //https://go.microsoft.com/fwlink/?LinkId=234236 上介绍了“用户控件”项模板
 
 namespace BiliBili_UWP.Components.Account
 {
-    public sealed partial class LoginPopup : UserControl,IAppPopup
+    public sealed partial class LoginPopup : UserControl, IAppPopup
     {
         public Popup _popup { get; set; }
         public Guid _popupId { get; set; }
+        private readonly DispatcherTimer _pollTimer = new DispatcherTimer() { Interval = TimeSpan.FromSeconds(2) };
+        private string _authCode;
+        private bool _isPolling;
+        private bool _isActive;
+
         public LoginPopup()
         {
             this.InitializeComponent();
-            App.BiliViewModel._webClient.ValidateLoginEvent += WebClient_ValidateLogin;
             UIHelper.PopupInit(this);
+            _pollTimer.Tick += PollTimer_Tick;
         }
 
-        private async void WebClient_ValidateLogin(object sender, string e)
+        public async void ShowPopup()
         {
-            try
-            {
-                JObject jObject = JObject.Parse(e);
-                if (jObject["access_token"] != null)
-                {
-                    var result = await App.BiliViewModel._client.Account.SetLoginStatusAsync(jObject["access_token"].ToString(), jObject["refresh_token"].ToString(), Convert.ToInt32(jObject["expires_in"].ToString()));
-                    if (result)
-                    {
-                        await App.BiliViewModel.GetMeAsync();
-                        HidePopup();
-                        return;
-                    }
-                }
-            }
-            catch (Exception)
-            {  
-            }
-            ShowMessageBanner("登陆失败");
-        }
-
-        public void ShowPopup()
-        {
-            UserNameInputBox.SetText("");
-            PasswordInputBox.SetText("");
-            CaptchaBlock.Visibility = Visibility.Collapsed;
-            WebContainer.Visibility = Visibility.Collapsed;
-            BackupWebView.NavigateToString("");
+            _isActive = true;
+            StatusBlock.Text = "正在获取二维码...";
+            RefreshButton.Visibility = Visibility.Collapsed;
+            QrImage.Source = null;
+            QrLoadingRing.IsActive = true;
             UIHelper.PopupShow(this);
             PopupIn.Begin();
+            await LoadQrAsync();
         }
         public void HidePopup()
         {
+            _isActive = false;
+            _pollTimer.Stop();
             PopupOut.Begin();
             PopupOut.Completed -= PopupOut_Completed;
             PopupOut.Completed += PopupOut_Completed;
@@ -85,140 +61,128 @@ namespace BiliBili_UWP.Components.Account
         {
             HidePopup();
         }
-        public void SetUserName(string name)
-        {
-            UserNameInputBox.SetText(name);
-            PasswordInputBox.SetText("");
-            HideMessageBanner();
-        }
 
-        private async void LoginButton_Click(object sender, RoutedEventArgs e)
+        private async Task LoadQrAsync()
         {
-            await Login();
-        }
-
-        private async Task Login()
-        {
-            var waiting = new WaitingPopup("正在验证数据...");
-            waiting.ShowPopup();
-            string userName = UserNameInputBox.Text;
-            string password = PasswordInputBox.Text;
-            if (string.IsNullOrEmpty(userName) || string.IsNullOrEmpty(password))
-            {
-                ShowMessageBanner("用户名或密码不能为空");
-            }
-            else if (CaptchaBlock.Visibility == Visibility.Visible && string.IsNullOrEmpty(CaptchaBlock.Code))
-            {
-                ShowMessageBanner("验证码不能为空");
-            }
-            else
-            {
-                var result = await App.BiliViewModel._client.Account.LoginAsync(userName, password, CaptchaBlock.Code);
-                switch (result.Status)
-                {
-                    case LoginResultType.Success:
-                        await App.BiliViewModel.GetMeAsync();
-                        HidePopup();
-                        break;
-                    case LoginResultType.Fail:
-                        ShowMessageBanner("登录失败，请检查账号密码");
-                        break;
-                    case LoginResultType.Error:
-                        ShowMessageBanner("2233娘无情地驳回了请求，请稍后重试");
-                        break;
-                    case LoginResultType.NeedCaptcha:
-                        ShowMessageBanner("需要输入验证码");
-                        CaptchaBlock.Visibility = Visibility.Visible;
-                        await CaptchaBlock.RefreshCode();
-                        await Task.Delay(1000);
-                        HideMessageBanner();
-                        break;
-                    case LoginResultType.Busy:
-                        ShowMessageBanner("服务器忙，请稍后重试");
-                        break;
-                    case LoginResultType.NeedValidate:
-                        ShowMessageBanner("需要安全验证");
-                        BackupWebView.Visibility = Visibility.Visible;
-                        BackupWebView.Source = new Uri(result.Url.Replace("&ticket=1", ""));
-                        await Task.Delay(1000);
-                        HideMessageBanner();
-                        break;
-                    default:
-                        break;
-                }
-            }
-            waiting.HidePopup();
-        }
-
-        public void ShowMessageBanner(string text)
-        {
-            MessageBanner.Text = text;
-            MessageBanner.Visibility = Visibility.Visible;
-        }
-        public void HideMessageBanner()
-        {
-            MessageBanner.Visibility = Visibility.Collapsed;
-        }
-
-        private async void BackupWebView_NavigationStarting(WebView sender, WebViewNavigationStartingEventArgs args)
-        {
-            if (args.Uri == null)
+            _pollTimer.Stop();
+            _authCode = null;
+            QrImage.Source = null;
+            QrLoadingRing.IsActive = true;
+            RefreshButton.Visibility = Visibility.Collapsed;
+            StatusBlock.Text = "正在获取二维码...";
+            var qr = await App.BiliViewModel._client.Account.GetTvLoginQrAsync();
+            if (!_isActive)
                 return;
-            if (args.Uri.AbsoluteUri.Contains("access_key="))
+            if (qr == null)
             {
-                var access = Regex.Match(args.Uri.AbsoluteUri, "access_key=(.*?)&").Groups[1].Value;
-                await App.BiliViewModel._client.Account.SetLoginStatusAsync(access);
-                await App.BiliViewModel.GetMeAsync();
-                HidePopup();
+                QrLoadingRing.IsActive = false;
+                RefreshButton.Visibility = Visibility.Visible;
+                StatusBlock.Text = "二维码获取失败，请检查网络后刷新重试";
+                return;
             }
+            _authCode = qr.AuthCode;
+            QrImage.Source = RenderQr(qr.Url);
+            QrLoadingRing.IsActive = false;
+            StatusBlock.Text = "请使用哔哩哔哩手机客户端扫码登录";
+            _pollTimer.Start();
+        }
+
+        private WriteableBitmap RenderQr(string content)
+        {
+            var writer = new BarcodeWriterPixelData
+            {
+                Format = BarcodeFormat.QR_CODE,
+                Options = new QrCodeEncodingOptions
+                {
+                    Width = 440,
+                    Height = 440,
+                    Margin = 2,
+                    CharacterSet = "UTF-8"
+                }
+            };
+            var pixels = writer.Write(content);
+            var bitmap = new WriteableBitmap(pixels.Width, pixels.Height);
+            if (pixels.Pixels.Length == pixels.Width * pixels.Height * 4)
+            {
+                for (int i = 3; i < pixels.Pixels.Length; i += 4)
+                    pixels.Pixels[i] = 255;
+            }
+            using (var stream = bitmap.PixelBuffer.AsStream())
+            {
+                stream.Write(pixels.Pixels, 0, pixels.Pixels.Length);
+                stream.Flush();
+            }
+            bitmap.Invalidate();
+            return bitmap;
+        }
+
+        private async void PollTimer_Tick(object sender, object e)
+        {
+            if (_isPolling || string.IsNullOrEmpty(_authCode) || !_isActive)
+                return;
+            _isPolling = true;
             try
             {
-                BackupWebView.AddWebAllowedObject("biliapp", App.BiliViewModel._webClient);
-                BackupWebView.AddWebAllowedObject("secure", App.BiliViewModel._secure);
-            }
-            catch (Exception)
-            {
-            }
-        }
-
-        private async void BackupWebView_NavigationCompleted(WebView sender, WebViewNavigationCompletedEventArgs args)
-        {
-            if (args.Uri == null)
-                return;
-            if (args.Uri.AbsoluteUri == "https://passport.bilibili.com/ajax/miniLogin/redirect")
-            {
-                var results = await BiliTool.GetTextFromWebAsync("https://passport.bilibili.com/login/app/third?appkey=27eb53fc9058f8c3&api=http%3A%2F%2Flink.acg.tv%2Fforum.php&sign=67ec798004373253d60114caaad89a8c",true);
-                var obj = JObject.Parse(results);
-                if (Convert.ToInt32(obj["code"].ToString()) == 0)
+                var result = await App.BiliViewModel._client.Account.PollTvLoginAsync(_authCode);
+                if (!_isActive)
+                    return;
+                if (result == null)
                 {
-                    BackupWebView.Navigate(new Uri(obj["data"]["confirm_uri"].ToString()));
+                    StatusBlock.Text = "网络异常，正在重试...";
+                    return;
                 }
-                else
+                switch (result.Code)
                 {
-                    new TipPopup("登陆失败，请重试").ShowError();
+                    case 0:
+                        _pollTimer.Stop();
+                        QrLoadingRing.IsActive = true;
+                        StatusBlock.Text = "登录成功，正在获取账号信息...";
+                        await App.BiliViewModel.GetMeAsync();
+                        if (!App.BiliViewModel.IsLogin)
+                        {
+                            await Task.Delay(1200);
+                            await App.BiliViewModel.GetMeAsync();
+                        }
+                        QrLoadingRing.IsActive = false;
+                        if (App.BiliViewModel.IsLogin)
+                        {
+                            StatusBlock.Text = "登录成功";
+                            HidePopup();
+                        }
+                        else
+                        {
+                            RefreshButton.Visibility = Visibility.Visible;
+                            StatusBlock.Text = "登录凭证已保存，但账号信息获取失败，请点击刷新重试";
+                        }
+                        break;
+                    case 86038:
+                        _pollTimer.Stop();
+                        RefreshButton.Visibility = Visibility.Visible;
+                        StatusBlock.Text = "二维码已失效，请点击刷新";
+                        break;
+                    case 86090:
+                        StatusBlock.Text = "已扫码，请在手机上确认登录";
+                        break;
+                    case 86039:
+                    case 86101:
+                        StatusBlock.Text = "请使用哔哩哔哩手机客户端扫码登录";
+                        break;
+                    default:
+                        _pollTimer.Stop();
+                        RefreshButton.Visibility = Visibility.Visible;
+                        StatusBlock.Text = string.IsNullOrEmpty(result.Message) ? "登录失败，请刷新重试" : result.Message;
+                        break;
                 }
             }
-        }
-
-        private void WebCloseButton_Click(object sender, RoutedEventArgs e)
-        {
-            WebContainer.Visibility = Visibility.Collapsed;
-        }
-
-        private void WebButton_Click(object sender, RoutedEventArgs e)
-        {
-            WebContainer.Visibility = Visibility.Visible;
-            BackupWebView.Source= new Uri("https://passport.bilibili.com/ajax/miniLogin/minilogin");
-            BackupWebView.Width = 440;
-            BackupWebView.Height = 480;
-        }
-
-        private async void PasswordInputBox_KeyDown(object sender, KeyRoutedEventArgs e)
-        {
-            if (e.Key == VirtualKey.Enter)
+            finally
             {
-                await Login();
+                _isPolling = false;
             }
+        }
+
+        private async void RefreshButton_Click(object sender, RoutedEventArgs e)
+        {
+            await LoadQrAsync();
         }
     }
 }

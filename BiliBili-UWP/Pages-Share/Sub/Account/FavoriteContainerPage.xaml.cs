@@ -74,9 +74,9 @@ namespace BiliBili_UWP.Pages_Share.Sub.Account
             if (isIncrease)
                 pn += 1;
             if (_type == "Favorite")
-                items = await _account.GetFavoritesAsync(Convert.ToInt32(BiliTool.mid), pn);
+                items = await _account.GetFavoritesAsync(Convert.ToInt64(BiliTool.mid), pn);
             else
-                items = await _account.GetCollectListAsync(Convert.ToInt32(BiliTool.mid), pn);
+                items = await _account.GetCollectListAsync(Convert.ToInt64(BiliTool.mid), pn);
             if(items!=null && items.Count > 0)
             {
                 items.ForEach(p => FavoriteCollection.Add(p));

@@ -126,7 +126,7 @@ namespace BiliBili_UWP.Pages_Tablet.Main
                 }
                 source.Item2.ForEach(p => DisplayCollection.Add(p));
             }
-            HolderText.Visibility = source.Item2.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+            HolderText.Visibility = (source == null || source.Item2.Count == 0) ? Visibility.Visible : Visibility.Collapsed;
             LoadingBar.Visibility=Visibility.Collapsed;
         }
         private async void RegionListView_ItemClick(object sender, ItemClickEventArgs e)
@@ -148,10 +148,10 @@ namespace BiliBili_UWP.Pages_Tablet.Main
             HoldContainer.Visibility = Visibility.Collapsed;
 
             _videoBlock.Visibility = Visibility.Visible;
-            var cache = _videoDetailList.Where(p => p.aid == Convert.ToInt32(item.aid)).FirstOrDefault();
+            var cache = _videoDetailList.Where(p => p.aid == Convert.ToInt64(item.aid)).FirstOrDefault();
             if (cache == null)
             {
-                await _videoBlock.Init(Convert.ToInt32(item.aid));
+                await _videoBlock.Init(Convert.ToInt64(item.aid));
                 cache = _videoBlock._detail;
                 _videoDetailList.Add(cache);
             }

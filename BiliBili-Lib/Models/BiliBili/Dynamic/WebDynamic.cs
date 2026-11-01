@@ -14,7 +14,7 @@ namespace BiliBili_Lib.Models.BiliBili
         public Sketch sketch { get; set; }
         public class Vest
         {
-            public int uid { get; set; }
+            public long uid { get; set; }
             public string content { get; set; }
             public string ctrl { get; set; }
         }

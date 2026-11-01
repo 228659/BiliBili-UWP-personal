@@ -8,8 +8,8 @@ namespace BiliBili_Lib.Models.BiliBili.Feedback
 {
     public class FeedUser
     {
-        public int mid { get; set; }
-        public int fans { get; set; }
+        public long mid { get; set; }
+        public long fans { get; set; }
         public string nickname { get; set; }
         public string avatar { get; set; }
         public string mid_link { get; set; }

@@ -308,7 +308,7 @@ namespace BiliBili_UWP.Components.Controls
             if (App.BiliViewModel.CheckAccoutStatus())
             {
                 FollowButton.IsLoading = true;
-                int followId = Data.desc.user_profile.info.uid;
+                long followId = Data.desc.user_profile.info.uid;
                 bool result = await App.BiliViewModel._client.Account.FollowUser(followId);
                 if (result)
                 {

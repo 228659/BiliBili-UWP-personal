@@ -9,9 +9,9 @@ namespace BiliBili_Lib.Models.BiliBili
 {
     public class VideoDynamic
     {
-        public int aid { get; set; }
+        public long aid { get; set; }
         public int attribute { get; set; }
-        public int cid { get; set; }
+        public long cid { get; set; }
         public string comment_jump_url { get; set; }
         public int copyright { get; set; }
         public int ctime { get; set; }
@@ -35,7 +35,7 @@ namespace BiliBili_Lib.Models.BiliBili
     public class Owner
     {
         public string face { get; set; }
-        public int mid { get; set; }
+        public long mid { get; set; }
         public string name { get; set; }
 
         public override bool Equals(object obj)
