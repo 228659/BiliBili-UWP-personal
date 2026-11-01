@@ -7,6 +7,7 @@ using System.Runtime.InteropServices.WindowsRuntime;
 using System.Threading.Tasks;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Media.Imaging;
 using ZXing;
 using ZXing.QrCode;
@@ -102,14 +103,33 @@ namespace BiliBili_UWP.Components.Account
             };
             var pixels = writer.Write(content);
             var bitmap = new WriteableBitmap(pixels.Width, pixels.Height);
-            if (pixels.Pixels.Length == pixels.Width * pixels.Height * 4)
+            var source = pixels.Pixels;
+            var pixelCount = pixels.Width * pixels.Height;
+            byte[] bgra;
+            if (source.Length == pixelCount * 4)
             {
-                for (int i = 3; i < pixels.Pixels.Length; i += 4)
-                    pixels.Pixels[i] = 255;
+                bgra = source;
+                for (int i = 3; i < bgra.Length; i += 4)
+                    bgra[i] = 255;
+            }
+            else if (source.Length == pixelCount * 3)
+            {
+                bgra = new byte[pixelCount * 4];
+                for (int s = 0, d = 0; s < source.Length; s += 3, d += 4)
+                {
+                    bgra[d] = source[s];
+                    bgra[d + 1] = source[s + 1];
+                    bgra[d + 2] = source[s + 2];
+                    bgra[d + 3] = 255;
+                }
+            }
+            else
+            {
+                bgra = source;
             }
             using (var stream = bitmap.PixelBuffer.AsStream())
             {
-                stream.Write(pixels.Pixels, 0, pixels.Pixels.Length);
+                stream.Write(bgra, 0, bgra.Length);
                 stream.Flush();
             }
             bitmap.Invalidate();

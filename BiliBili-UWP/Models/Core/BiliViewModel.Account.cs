@@ -81,7 +81,7 @@ namespace BiliBili_UWP.Models.Core
         public async Task GetMeAsync()
         {
             var data = await _client.Account.GetMeAsync();
-            if (data != null)
+            if (data != null && data.mid > 0)
             {
                 if (!IsLogin)
                 {
