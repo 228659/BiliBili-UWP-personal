@@ -39,6 +39,7 @@ namespace BiliBili_UWP.Pages.Main
         private string offset = "";
         private double _scrollOffset = 0;
         private bool _isOnlyVideo = false;
+        private bool _useWebDynamic = false;
         public DynamicPage()
         {
             this.InitializeComponent();
@@ -110,20 +111,40 @@ namespace BiliBili_UWP.Pages.Main
         {
             if (_isDynamicRequesting)
                 return;
+            // 新版动态度没有更多时会返回空 offset，避免重复请求第一页
+            if (_useWebDynamic && string.IsNullOrEmpty(offset) && DynamicCollection.Count > 0)
+                return;
             _isDynamicRequesting = true;
             Tuple<string, List<Topic>> data = null;
             if (!LoadingRing.IsActive)
                 DynamicLoadingBar.Visibility = Visibility.Visible;
             if (string.IsNullOrEmpty(offset))
             {
-                var temp = await _topicService.GetNewDynamicAsync();
-                if (temp != null && temp.cards != null)
+                // 网页动态接口依赖登录 Cookie，启动时可能还没换取过
+                if (!BiliTool.GetLoginCookieNames().Contains("SESSDATA"))
+                    await App.BiliViewModel._client.Account.SSO();
+                var web = await _topicService.GetWebDynamicFeedAsync("");
+                if (web != null && web.Item2 != null && web.Item2.Count > 0)
                 {
-                    string historyOffset = temp.history_offset;
-                    if (string.IsNullOrEmpty(historyOffset) && temp.cards.Count > 0)
-                        historyOffset = temp.cards[temp.cards.Count - 1].desc?.dynamic_id_str;
-                    data = new Tuple<string, List<Topic>>(historyOffset, temp.cards);
+                    _useWebDynamic = true;
+                    data = web;
                 }
+                else
+                {
+                    _useWebDynamic = false;
+                    var temp = await _topicService.GetNewDynamicAsync();
+                    if (temp != null && temp.cards != null)
+                    {
+                        string historyOffset = temp.history_offset;
+                        if (string.IsNullOrEmpty(historyOffset) && temp.cards.Count > 0)
+                            historyOffset = temp.cards[temp.cards.Count - 1].desc?.dynamic_id_str;
+                        data = new Tuple<string, List<Topic>>(historyOffset, temp.cards);
+                    }
+                }
+            }
+            else if (_useWebDynamic)
+            {
+                data = await _topicService.GetWebDynamicFeedAsync(offset);
             }
             else
                 data = await _topicService.GetHistoryDynamicAsync(offset);

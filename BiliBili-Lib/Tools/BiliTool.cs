@@ -32,6 +32,31 @@ namespace BiliBili_Lib.Tools
         public static string sid = "";
         public static string mid = "";
         public static ILogger _logger = LogManagerFactory.CreateLogManager().GetLogger("网络请求");
+        private const string AcceptHeader = "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9";
+        private static readonly HttpBaseProtocolFilter CookieFilter = CreateCookieFilter();
+        private static readonly HttpClient CookieClient = CreateCookieClient(CookieFilter);
+        private static string _wbiMixinKey = null;
+        private static DateTime _wbiKeyExpire = DateTime.MinValue;
+        private static readonly int[] MixinKeyEncTab = new int[]
+        {
+            46, 47, 18, 2, 53, 8, 23, 32, 15, 50, 10, 31, 58, 3, 45, 35,
+            27, 43, 5, 49, 33, 9, 42, 19, 29, 28, 14, 39, 12, 38, 41, 13,
+            37, 48, 7, 16, 24, 55, 40, 61, 26, 17, 0, 1, 60, 51, 30, 4,
+            22, 25, 54, 21, 56, 59, 6, 63, 57, 62, 11, 36, 20, 34, 44, 52
+        };
+        private static HttpBaseProtocolFilter CreateCookieFilter()
+        {
+            var filter = new HttpBaseProtocolFilter();
+            filter.IgnorableServerCertificateErrors.Add(ChainValidationResult.Expired);
+            filter.AllowAutoRedirect = false;
+            return filter;
+        }
+        private static HttpClient CreateCookieClient(HttpBaseProtocolFilter filter)
+        {
+            var client = new HttpClient(filter);
+            client.DefaultRequestHeaders.TryAppendWithoutValidation("accept", AcceptHeader);
+            return client;
+        }
         public static async Task WriteNetworkLogAsync(string message)
         {
             try
@@ -48,54 +73,65 @@ namespace BiliBili_Lib.Tools
         /// </summary>
         /// <param name="url"></param>
         /// <returns></returns>
-        public static async Task<string> GetTextFromWebAsync(string url, bool total = false, string path = "data", bool needReferer = false)
+        public static async Task<string> GetTextFromWebAsync(string url, bool total = false, string path = "data", bool needReferer = false, bool useCookie = false)
         {
-            HttpBaseProtocolFilter filter = new HttpBaseProtocolFilter();
-            filter.IgnorableServerCertificateErrors.Add(ChainValidationResult.Expired);
-            filter.AllowAutoRedirect = false;
-            var client = new HttpClient(filter);
-            using (client)
-            using (filter)
+            HttpBaseProtocolFilter filter = null;
+            HttpClient client;
+            if (useCookie)
+                client = CookieClient;
+            else
             {
-                try
+                filter = new HttpBaseProtocolFilter();
+                filter.IgnorableServerCertificateErrors.Add(ChainValidationResult.Expired);
+                filter.AllowAutoRedirect = false;
+                client = new HttpClient(filter);
+            }
+            try
+            {
+                if (!useCookie)
+                    client.DefaultRequestHeaders.TryAppendWithoutValidation("accept", AcceptHeader);
+                var uri = new Uri(url);
+                if (needReferer)
+                    client.DefaultRequestHeaders.Referer = new Uri(uri.Scheme + "://" + uri.Host);
+                var response = await client.GetAsync(new Uri(url));
+                if (response.IsSuccessStatusCode)
                 {
-                    //client.DefaultRequestHeaders.Add("user-agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/70.0.3538.102 Safari/537.36 Edge/18.19041");
-                    client.DefaultRequestHeaders.Add("accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9");
-                    var uri = new Uri(url);
-                    if (needReferer)
-                        client.DefaultRequestHeaders.Referer = new Uri(uri.Scheme + "://" + uri.Host);
-                    var response = await client.GetAsync(new Uri(url));
-                    if (response.IsSuccessStatusCode)
-                    {
-                        string res = await response.Content.ReadAsStringAsync();
-                        if (total)
-                            return res;
-                        var jobj = JObject.Parse(res);
-                        string content = string.Empty;
-                        if (jobj.SelectToken(path) != null)
-                            content = jobj.SelectToken(path).ToString();
-                        else
-                            content = res;
-                        return content;
-                    }
-                    else if (response.StatusCode == Windows.Web.Http.HttpStatusCode.TemporaryRedirect || response.StatusCode == Windows.Web.Http.HttpStatusCode.MovedPermanently)
-                    {
-                        string tempUrl = response.Headers.Location.AbsoluteUri;
-                        return await GetTextFromWebAsync(tempUrl, total, path);
-                    }
+                    string res = await response.Content.ReadAsStringAsync();
+                    if (total)
+                        return res;
+                    var jobj = JObject.Parse(res);
+                    string content = string.Empty;
+                    if (jobj.SelectToken(path) != null)
+                        content = jobj.SelectToken(path).ToString();
                     else
-                    {
-                        string body = await response.Content.ReadAsStringAsync();
-                        await WriteNetworkLogAsync($"状态码 {(int)response.StatusCode}：URL: {url}; Body: {body}");
-                        _logger.Warn($"请求数据异常(Text)：URL: {url}; Message: {body}");
-                        return null;
-                    }
+                        content = res;
+                    return content;
                 }
-                catch (Exception ex)
+                else if (response.StatusCode == Windows.Web.Http.HttpStatusCode.TemporaryRedirect || response.StatusCode == Windows.Web.Http.HttpStatusCode.MovedPermanently)
                 {
-                    await WriteNetworkLogAsync($"请求异常：URL: {url}; {ex}");
-                    _logger.Error($"请求出现异常:{url}", ex);
+                    string tempUrl = response.Headers.Location.AbsoluteUri;
+                    return await GetTextFromWebAsync(tempUrl, total, path, needReferer, useCookie);
+                }
+                else
+                {
+                    string body = await response.Content.ReadAsStringAsync();
+                    await WriteNetworkLogAsync($"状态码 {(int)response.StatusCode}：URL: {url}; Body: {body}");
+                    _logger.Warn($"请求数据异常(Text)：URL: {url}; Message: {body}");
                     return null;
+                }
+            }
+            catch (Exception ex)
+            {
+                await WriteNetworkLogAsync($"请求异常：URL: {url}; {ex}");
+                _logger.Error($"请求出现异常:{url}", ex);
+                return null;
+            }
+            finally
+            {
+                if (filter != null)
+                {
+                    client.Dispose();
+                    filter.Dispose();
                 }
             }
         }
@@ -208,6 +244,102 @@ namespace BiliBili_Lib.Tools
             foreach (HttpCookie cookie in listCookies)
             {
                 filter.CookieManager.DeleteCookie(cookie);
+            }
+        }
+        /// <summary>
+        /// 读取带登录态 Cookie 的名称（不输出值）
+        /// </summary>
+        public static List<string> GetLoginCookieNames()
+        {
+            var names = new List<string>();
+            try
+            {
+                foreach (var cookie in CookieFilter.CookieManager.GetCookies(new Uri("https://api.bilibili.com/")))
+                    names.Add(cookie.Name);
+            }
+            catch
+            {
+            }
+            return names;
+        }
+        /// <summary>
+        /// 确保有 buvid 设备标识，否则 Web 接口容易触发风控
+        /// </summary>
+        public static async Task EnsureBuvidCookieAsync()
+        {
+            try
+            {
+                var names = GetLoginCookieNames();
+                if (names.Contains("buvid3"))
+                    return;
+                string content = await GetTextFromWebAsync("https://api.bilibili.com/x/frontend/finger/spi", true);
+                if (string.IsNullOrEmpty(content))
+                    return;
+                var jobj = JObject.Parse(content);
+                string b3 = jobj.SelectToken("data.b_3")?.ToString();
+                string b4 = jobj.SelectToken("data.b_4")?.ToString();
+                if (!string.IsNullOrEmpty(b3))
+                    CookieFilter.CookieManager.SetCookie(new HttpCookie("buvid3", ".bilibili.com", "/") { Value = b3 });
+                if (!string.IsNullOrEmpty(b4))
+                    CookieFilter.CookieManager.SetCookie(new HttpCookie("buvid4", ".bilibili.com", "/") { Value = b4 });
+            }
+            catch (Exception ex)
+            {
+                _logger.Warn($"buvid Cookie 获取失败：{ex.Message}");
+            }
+        }
+        /// <summary>
+        /// 生成 WBI 签名查询串
+        /// </summary>
+        public static async Task<string> CreateWbiQueryAsync(Dictionary<string, string> parameters)
+        {
+            string mixinKey = await GetWbiMixinKeyAsync();
+            if (string.IsNullOrEmpty(mixinKey))
+                return null;
+            var sorted = parameters.Where(p => p.Key != "wts").OrderBy(p => p.Key, StringComparer.Ordinal);
+            string query = string.Join("&", sorted.Select(p => $"{Uri.EscapeDataString(p.Key)}={Uri.EscapeDataString(p.Value ?? "")}"));
+            string wts = AppTool.GetNowSeconds().ToString();
+            string wRid = MD5Tool.GetMd5String(query + "&wts=" + wts + mixinKey).ToLower();
+            return query + $"&wts={wts}&w_rid={wRid}";
+        }
+        private static async Task<string> GetWbiMixinKeyAsync()
+        {
+            if (!string.IsNullOrEmpty(_wbiMixinKey) && DateTime.Now < _wbiKeyExpire)
+                return _wbiMixinKey;
+            try
+            {
+                string content = await GetTextFromWebAsync(Api.NAV, true, useCookie: true);
+                if (string.IsNullOrEmpty(content))
+                    return null;
+                var jobj = JObject.Parse(content);
+                string imgUrl = jobj.SelectToken("data.wbi_img.img_url")?.ToString();
+                string subUrl = jobj.SelectToken("data.wbi_img.sub_url")?.ToString();
+                if (string.IsNullOrEmpty(imgUrl) || string.IsNullOrEmpty(subUrl))
+                {
+                    _logger.Warn("WBI 密钥获取失败：nav 未返回 wbi_img");
+                    return null;
+                }
+                string raw = Path.GetFileNameWithoutExtension(new Uri(imgUrl).AbsolutePath) + Path.GetFileNameWithoutExtension(new Uri(subUrl).AbsolutePath);
+                var builder = new StringBuilder();
+                foreach (var index in MixinKeyEncTab)
+                {
+                    if (index < raw.Length)
+                        builder.Append(raw[index]);
+                }
+                string mixinKey = builder.ToString();
+                if (mixinKey.Length < 32)
+                {
+                    _logger.Warn("WBI 密钥长度不足");
+                    return null;
+                }
+                _wbiMixinKey = mixinKey.Substring(0, 32);
+                _wbiKeyExpire = DateTime.Now.AddHours(1);
+                return _wbiMixinKey;
+            }
+            catch (Exception ex)
+            {
+                _logger.Error("WBI 密钥获取异常", ex);
+                return null;
             }
         }
 

@@ -302,7 +302,7 @@ namespace BiliBili_Lib.Service
             try
             {
                 var url = BiliTool.UrlContact(Api.PASSPORT_SSO, hasAccessKey: true);
-                await BiliTool.GetTextFromWebAsync(url, true);
+                await BiliTool.GetTextFromWebAsync(url, true, useCookie: true);
             }
             catch (Exception)
             {

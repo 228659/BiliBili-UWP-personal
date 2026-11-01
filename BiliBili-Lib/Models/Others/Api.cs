@@ -14,6 +14,14 @@ namespace BiliBili_Lib.Models.Others
          */
         public const string _apiBase = "https://api.bilibili.com";
         public const string _appBase = "https://app.bilibili.com";
+        /// <summary>
+        /// Web 导航信息（含 WBI 密钥）
+        /// </summary>
+        public const string NAV = _apiBase + "/x/web-interface/nav";
+        /// <summary>
+        /// 新版关注动态流
+        /// </summary>
+        public const string WEB_DYNAMIC_FEED = _apiBase + "/x/polymer/web-dynamic/v1/feed/all";
         public const string _vcBase = "https://api.vc.bilibili.com";
         public const string _liveBase = "https://api.live.bilibili.com";
         public const string _passBase = "https://passport.bilibili.com";

@@ -121,7 +121,11 @@ namespace BiliBili_UWP.Models.Core
                 bool isValid = false;
                 isValid = await _client.Account.CheckTokenStatusAsync();
                 if (isValid)
+                {
                     await GetMeAsync();
+                    // 令牌有效时也要换取一次 Web Cookie，动态时间线等网页接口依赖 SESSDATA
+                    await _client.Account.SSO();
+                }
                 else
                 {
                     isValid = await _client.Account.RefreshTokenAsync();

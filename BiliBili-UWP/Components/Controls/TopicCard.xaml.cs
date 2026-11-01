@@ -89,7 +89,8 @@ namespace BiliBili_UWP.Components.Controls
             if (data.desc.user_profile != null)
             {
                 HeaderContainer.Visibility = Visibility.Visible;
-                UserAvatar.ProfilePicture = new BitmapImage(new Uri(data.desc.user_profile.info.face)) { DecodePixelWidth = 40 };
+                if (!string.IsNullOrEmpty(data.desc.user_profile.info.face))
+                    UserAvatar.ProfilePicture = new BitmapImage(new Uri(data.desc.user_profile.info.face)) { DecodePixelWidth = 40 };
                 UserNameBlock.Text = data.desc.user_profile.info.uname;
                 string tip = AppTool.GetReadDateString(data.desc.timestamp);
                 if (data.display != null && !string.IsNullOrEmpty(data.display.usr_action_txt))
