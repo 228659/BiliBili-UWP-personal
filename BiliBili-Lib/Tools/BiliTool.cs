@@ -48,7 +48,8 @@ namespace BiliBili_Lib.Tools
         {
             var filter = new HttpBaseProtocolFilter();
             filter.IgnorableServerCertificateErrors.Add(ChainValidationResult.Expired);
-            filter.AllowAutoRedirect = false;
+            // SSO 通过 302 跳转下发 SESSDATA，自动跳转才能把整条链路上的 Cookie 收进 CookieManager
+            filter.AllowAutoRedirect = true;
             return filter;
         }
         private static HttpClient CreateCookieClient(HttpBaseProtocolFilter filter)
@@ -107,7 +108,10 @@ namespace BiliBili_Lib.Tools
                         content = res;
                     return content;
                 }
-                else if (response.StatusCode == Windows.Web.Http.HttpStatusCode.TemporaryRedirect || response.StatusCode == Windows.Web.Http.HttpStatusCode.MovedPermanently)
+                else if (response.StatusCode == Windows.Web.Http.HttpStatusCode.MovedPermanently
+                    || response.StatusCode == Windows.Web.Http.HttpStatusCode.Found
+                    || response.StatusCode == Windows.Web.Http.HttpStatusCode.SeeOther
+                    || response.StatusCode == Windows.Web.Http.HttpStatusCode.TemporaryRedirect)
                 {
                     string tempUrl = response.Headers.Location.AbsoluteUri;
                     return await GetTextFromWebAsync(tempUrl, total, path, needReferer, useCookie);
