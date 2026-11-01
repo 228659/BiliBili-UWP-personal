@@ -11,6 +11,7 @@
 - 适配 B 站 64 位 ID（aid / mid / cid / 播放量），修复推荐、排行榜、动态的溢出与解析失败
 - 排行榜改用网页当前使用的频道接口（`ranking/v2` 新频道 ID），数据与网页排行榜一致，不再返回 2025 年的冻结榜单
 - 修复动态页在接口无数据时的 `NullReferenceException`，动态请求改用与登录令牌匹配的 Android appkey 签名
+- 动态卡片中 `acl` 等超出 Int32 范围的字段改用 64 位类型，避免整页数据反序列化失败
 - GitHub Actions 云端编译（x64 Debug / Release），本机无需安装 Visual Studio
 
 ### 已知限制

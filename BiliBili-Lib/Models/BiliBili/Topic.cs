@@ -38,7 +38,7 @@ namespace BiliBili_Lib.Models.BiliBili
         public long uid { get; set; }
         public int type { get; set; }
         public long rid { get; set; }
-        public int acl { get; set; }
+        public long acl { get; set; }
         public long view { get; set; }
         public int repost { get; set; }
         public int like { get; set; }
@@ -63,7 +63,7 @@ namespace BiliBili_Lib.Models.BiliBili
         public long uid { get; set; }
         public int type { get; set; }
         public string rid { get; set; }
-        public int acl { get; set; }
+        public long acl { get; set; }
         public long view { get; set; }
         public int repost { get; set; }
         public int like { get; set; }
