@@ -151,7 +151,14 @@ namespace BiliBili_Lib.Service
                 var jobj = JObject.Parse(data);
                 if (jobj.ContainsKey("dash"))
                 {
-                    return JsonConvert.DeserializeObject<VideoPlayDash>(data);
+                    var play = JsonConvert.DeserializeObject<VideoPlayDash>(data);
+                    if (play != null)
+                    {
+                        var streams = play.dash?.video == null ? string.Empty : string.Join(",", play.dash.video.Select(p => $"{p.id}/{p.codecid}"));
+                        var accepted = play.accept_quality == null ? string.Empty : string.Join("/", play.accept_quality);
+                        await BiliTool.WriteNetworkLogAsync($"番剧播放地址：请求 qn={qn}，返回 quality={play.quality}，可接受 {accepted}，DASH 流 {streams}，令牌 {(string.IsNullOrEmpty(BiliTool._accessToken) ? "无" : "有")}");
+                    }
+                    return play;
                 }
                 else if (jobj.ContainsKey("durl"))
                 {

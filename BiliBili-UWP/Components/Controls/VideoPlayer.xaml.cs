@@ -1330,7 +1330,7 @@ namespace BiliBili_UWP.Components.Controls
             if (video == null)
                 video = data.dash.video.OrderByDescending(p => p.id).FirstOrDefault(p => p.codecid == 7);
             App._logger.Info($"DASH：qn={_currentQn}，选中 {video?.id}/{video?.codecid} {video?.width}x{video?.height}，码率 {video?.bandwidth}，可用 {string.Join(",", data.dash.video.Select(p => p.id + "/" + p.codecid + "/" + p.width + "x" + p.height))}");
-            await BiliTool.WriteNetworkLogAsync($"DASH 选流：qn={_currentQn}，实际 {video?.id}/{video?.codecid} {video?.width}x{video?.height}，码率 {video?.bandwidth}");
+            await BiliTool.WriteNetworkLogAsync($"DASH 选流：qn={_currentQn}，实际 {video?.id}/{video?.codecid} {video?.width}x{video?.height}，码率 {video?.bandwidth}；可选 {string.Join(",", data.dash.video.Select(p => p.id + "/" + p.codecid))}");
             if (video == null)
             {
                 App._logger.Warn($"DASH 无可用视频流：qn={_currentQn}，codec={codecId}");
