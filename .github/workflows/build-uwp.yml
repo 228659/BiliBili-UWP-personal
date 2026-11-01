@@ -36,22 +36,20 @@ jobs:
         if: always()
         shell: pwsh
         run: |
-          $debug = "BiliBili-UWP/BiliBili-UWP/bin/x64/Debug"
-          if (Test-Path $debug) { Get-ChildItem $debug | Select-Object Name, Length }
-          if (Test-Path "BiliBili-UWP/BiliBili-UWP/AppPackages") {
-            Get-ChildItem "BiliBili-UWP/BiliBili-UWP/AppPackages" -Recurse -Depth 2 | Select-Object FullName, Length
-          }
+          Get-ChildItem "BiliBili-UWP/bin/x64/Debug" -Force -ErrorAction SilentlyContinue | Select-Object Name, Length
+          Get-ChildItem . -Recurse -Filter *.msix -ErrorAction SilentlyContinue | Select-Object FullName, Length
+          Get-ChildItem . -Recurse -Filter AppxManifest.xml -ErrorAction SilentlyContinue | Where-Object { $_.FullName -notmatch '\\obj\\' } | Select-Object FullName
 
       - name: Stage build output
         if: always()
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force artifact | Out-Null
-          $debug = "BiliBili-UWP/BiliBili-UWP/bin/x64/Debug"
-          if (Test-Path "$debug/AppX") { Copy-Item "$debug/AppX" artifact/AppX -Recurse }
-          if (Test-Path "BiliBili-UWP/BiliBili-UWP/AppPackages") {
-            Copy-Item "BiliBili-UWP/BiliBili-UWP/AppPackages" artifact/AppPackages -Recurse
-          }
+          $pkg = "BiliBili-UWP/AppPackages"
+          if (Test-Path $pkg) { Copy-Item $pkg artifact/AppPackages -Recurse }
+          $layout = "BiliBili-UWP/bin/x64/Debug/AppX"
+          if (Test-Path $layout) { Copy-Item $layout artifact/AppX -Recurse }
+          Get-ChildItem artifact -Recurse -ErrorAction SilentlyContinue | Select-Object FullName, Length
 
       - name: Upload build output
         if: always()
