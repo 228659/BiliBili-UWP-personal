@@ -131,6 +131,7 @@ namespace BiliBili_Lib.Service
                 if (!cookieNames.Contains("SESSDATA"))
                 {
                     BiliTool._logger.Warn($"新版动态：Cookie 缺少 SESSDATA（现有 {string.Join(",", cookieNames)}）");
+                    await BiliTool.WriteNetworkLogAsync($"新版动态：缺少 SESSDATA（现有 {string.Join(",", cookieNames)}）");
                     return null;
                 }
                 await BiliTool.EnsureBuvidCookieAsync();
@@ -153,6 +154,7 @@ namespace BiliBili_Lib.Service
                 if (code != 0)
                 {
                     BiliTool._logger.Warn($"新版动态请求失败：code={code}，message={jobj.Value<string>("message")}");
+                    await BiliTool.WriteNetworkLogAsync($"新版动态请求失败：code={code}，message={jobj.Value<string>("message")}");
                     return null;
                 }
                 var body = jobj["data"] as JObject;
@@ -172,6 +174,7 @@ namespace BiliBili_Lib.Service
                 bool hasMore = body.Value<bool?>("has_more") ?? false;
                 string nextOffset = hasMore ? (body.Value<string>("offset") ?? "") : "";
                 BiliTool._logger.Info($"新版动态：本页 {items.Count} 条，转换 {topics.Count} 条，has_more={hasMore}");
+                await BiliTool.WriteNetworkLogAsync($"新版动态：本页 {items.Count} 条，转换 {topics.Count} 条，has_more={hasMore}，next={nextOffset}");
                 return new Tuple<string, List<Topic>>(nextOffset, topics);
             }
             catch (Exception ex)
