@@ -1330,6 +1330,7 @@ namespace BiliBili_UWP.Components.Controls
             if (video == null)
                 video = data.dash.video.OrderByDescending(p => p.id).FirstOrDefault(p => p.codecid == 7);
             App._logger.Info($"DASH：qn={_currentQn}，选中 {video?.id}/{video?.codecid} {video?.width}x{video?.height}，码率 {video?.bandwidth}，可用 {string.Join(",", data.dash.video.Select(p => p.id + "/" + p.codecid + "/" + p.width + "x" + p.height))}");
+            await BiliTool.WriteNetworkLogAsync($"DASH 选流：qn={_currentQn}，实际 {video?.id}/{video?.codecid} {video?.width}x{video?.height}，码率 {video?.bandwidth}");
             if (video == null)
             {
                 App._logger.Warn($"DASH 无可用视频流：qn={_currentQn}，codec={codecId}");
@@ -1351,6 +1352,7 @@ namespace BiliBili_UWP.Components.Controls
             var playList = new Playlist(PlaylistTypes.NetworkHttp);
             var data = _playData as VideoPlayFlv;
             App._logger.Info($"FLV：qn={_currentQn}，返回 quality={data.quality}，分片 {data.durl?.Count ?? 0}");
+            await BiliTool.WriteNetworkLogAsync($"FLV 选流：qn={_currentQn}，返回 quality={data.quality}，分片 {data.durl?.Count ?? 0}");
             List<string> urls = new List<string>();
             data.durl.ForEach(p =>
             {
@@ -1618,6 +1620,7 @@ namespace BiliBili_UWP.Components.Controls
             {
                 _currentQn = e;
                 AppTool.WriteLocalSetting(Settings.FirstQuality, e.ToString());
+                await BiliTool.WriteNetworkLogAsync($"清晰度切换：qn={e}，重新请求播放地址");
                 // 清晰度变化必须按新 qn 重新请求播放地址，否则会一直播放旧清晰度的流
                 if (isBangumi && _bangumiPart != null)
                     await RefreshVideoSource(_bangumiPart, forceRefresh: true);
