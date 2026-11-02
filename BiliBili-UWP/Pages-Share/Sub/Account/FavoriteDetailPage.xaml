@@ -31,7 +31,7 @@
         </DataTemplate>
     </Page.Resources>
     <Grid>
-        <ScrollViewer Style="{StaticResource BasicScrollViewer}" ViewChanged="ScrollViewer_ViewChanged">
+        <ScrollViewer x:Name="PageScrollViewer" Style="{StaticResource BasicScrollViewer}" ViewChanged="ScrollViewer_ViewChanged">
             <Grid>
                 <ada:AdaptiveGridView x:Name="FavoriteVideoView" ItemsSource="{x:Bind VideoCollection}"
                   IsItemClickEnabled="True" ItemClick="FavoriteListView_ItemClick"

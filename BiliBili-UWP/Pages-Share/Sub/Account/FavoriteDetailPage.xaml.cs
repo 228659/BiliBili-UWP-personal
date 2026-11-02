@@ -78,6 +78,12 @@ namespace BiliBili_UWP.Pages_Share.Sub.Account
 
         private async Task LoadMoreVideo()
         {
+            await LoadMoreVideoBatch();
+            await LoadUntilScrollable();
+        }
+
+        private async Task LoadMoreVideoBatch()
+        {
             if (isRequesting)
                 return;
             if (index >= IdList.Count)
@@ -95,6 +101,21 @@ namespace BiliBili_UWP.Pages_Share.Sub.Account
             isRequesting = false;
             LoadingBar.Visibility = Visibility.Collapsed;
             HolderText.Visibility = VideoCollection.Count == 0 ? Visibility.Visible : Visibility.Collapsed;
+        }
+
+        private async Task LoadUntilScrollable()
+        {
+            for (int i = 0; i < 10 && index < IdList.Count; i++)
+            {
+                await Task.Delay(50);
+                PageScrollViewer.UpdateLayout();
+                if (PageScrollViewer.ViewportHeight <= 0 || PageScrollViewer.ExtentHeight > PageScrollViewer.ViewportHeight + 1)
+                    break;
+                int before = index;
+                await LoadMoreVideoBatch();
+                if (index == before)
+                    break;
+            }
         }
 
         private void FavoriteListView_ItemClick(object sender, ItemClickEventArgs e)
