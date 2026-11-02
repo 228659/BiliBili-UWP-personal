@@ -3,9 +3,15 @@
 > 基于 [Richasy/BiliBili-UWP](https://github.com/Richasy/BiliBili-UWP) 的个人自用修改版。上游项目已停止维护并从 Microsoft Store 下架。
 > 本仓库只做兼容性修复，不提供商业服务，与哔哩哔哩官方无关。
 
-当前版本：**1.3.13.0**（2026-11-02） · 支持 **Windows 10 2004 及以上（含 Windows 11）/ x64**
+当前版本：**1.3.14.0**（2026-11-02） · 支持 **Windows 10 2004 及以上（含 Windows 11）/ x64**
 
 ## 这个版本改了什么
+
+### 1.3.14.0（2026-11-02）
+
+- “每列视频数”设置扩展到全部视频列表：首页/推荐、历史、排行榜、分区、稍后再看、收藏夹
+- 收藏夹视频列表在首屏数据加载完成前保持加载占位，避免空白跳动
+- 修复视频详情页信息区被占位层覆盖、不显示亚克力的问题
 
 ### 1.3.13.0（2026-11-02）
 
@@ -32,7 +38,7 @@
 
 ## 安装
 
-1. 在本仓库 [Releases](https://github.com/228659/BiliBili-UWP-personal/releases) 下载 `BiliBili-UWP-1.3.13.0-x64-AppX.zip`
+1. 在本仓库 [Releases](https://github.com/228659/BiliBili-UWP-personal/releases) 下载 `BiliBili-UWP-1.3.14.0-x64-AppX.zip`
 2. 解压到任意目录
 3. 开启 Windows 的“开发人员模式”（设置 → 系统 → 开发者选项）
 4. 右键 `Install.ps1` → 使用 PowerShell 运行，或在 PowerShell 中执行：
