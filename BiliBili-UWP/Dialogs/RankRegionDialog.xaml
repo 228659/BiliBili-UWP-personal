@@ -15,7 +15,7 @@
     CloseButtonText="取消"
     DefaultButton="Primary">
 
-    <Grid Width="560">
+    <Grid Width="500">
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/>
             <RowDefinition Height="Auto"/>
@@ -36,7 +36,7 @@
                 </ItemsControl.ItemsPanel>
                 <ItemsControl.ItemTemplate>
                     <DataTemplate x:DataType="local:RankRegionOption">
-                        <Grid Width="252" Height="88" Margin="0,0,10,10" Padding="14,12" CornerRadius="10"
+                        <Grid Width="240" Height="88" Margin="0,0,10,10" Padding="14,12" CornerRadius="10"
                               Background="{x:Bind TileBackground,Mode=OneWay}"
                               BorderBrush="{x:Bind TileBorderBrush,Mode=OneWay}" BorderThickness="1"
                               Tapped="RegionTile_Tapped">
