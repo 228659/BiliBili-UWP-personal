@@ -83,6 +83,28 @@ namespace BiliBili_UWP.Models.UI
             return (Brush)Application.Current.Resources[key.ToString()];
         }
         /// <summary>
+        /// 调整亚克力通透度，数值越大背景越通透（模糊半径由系统固定）
+        /// </summary>
+        public static void ApplyAcrylicTransparency(double transparency)
+        {
+            transparency = Math.Max(0, Math.Min(1, transparency));
+            double contentOpacity = Math.Max(0.1, 1 - transparency);
+            double sideOpacity = Math.Max(0.1, contentOpacity - 0.1);
+            SetAcrylicTintOpacity("ContentAcrylicBackground", contentOpacity);
+            SetAcrylicTintOpacity("SideBackground", sideOpacity);
+        }
+        private static void SetAcrylicTintOpacity(string key, double opacity)
+        {
+            try
+            {
+                if (Application.Current.Resources[key] is AcrylicBrush brush)
+                    brush.TintOpacity = opacity;
+            }
+            catch
+            {
+            }
+        }
+        /// <summary>
         /// 获取预先定义的字体资源
         /// </summary>
         /// <param name="key">键</param>

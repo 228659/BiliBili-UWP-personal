@@ -213,10 +213,16 @@ namespace BiliBili_UWP.Components.Controls
         private void SetPlayerMode()
         {
             string mode = AppTool.GetLocalSetting(Settings.PlayerMode, "Default");
+            mediaElement.Stretch = Stretch.Uniform;
             if (mode == "Cinema")
                 MTC.IsCinema = true;
             else if (mode == "Full")
                 MTC.IsFullWindow = true;
+            else if (mode == "FillApp")
+            {
+                mediaElement.Stretch = Stretch.UniformToFill;
+                MTC.IsCinema = true;
+            }
         }
         private void Reset()
         {
@@ -1608,6 +1614,8 @@ namespace BiliBili_UWP.Components.Controls
         }
         private void VideoMTC_CinemaChanged(object sender, bool e)
         {
+            if (!e)
+                mediaElement.Stretch = Stretch.Uniform;
             bool isShowDanmakuBar = AppTool.GetBoolSetting(Settings.IsShowDanmakuBarInCinema, false);
             DanmakuBarVisibility = isShowDanmakuBar ? Visibility.Visible : Visibility.Collapsed;
             ExitScreenButton.Visibility = e ? Visibility.Visible : Visibility.Collapsed;

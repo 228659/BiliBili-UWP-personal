@@ -1,0 +1,63 @@
+﻿<ContentDialog
+    x:Class="BiliBili_UWP.Dialogs.RankRegionDialog"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:BiliBili_UWP.Dialogs"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Style="{StaticResource BasicDialogStyle}"
+    Background="{ThemeResource PopupBackground}"
+    CornerRadius="10"
+    Title="排行榜分区"
+    PrimaryButtonText="保存"
+    SecondaryButtonText="恢复默认"
+    CloseButtonText="取消"
+    DefaultButton="Primary">
+
+    <Grid Width="560">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <Grid Margin="0,0,0,12">
+            <TextBlock x:Name="HintBlock" Style="{StaticResource SmallTipTextStyle}"
+                       Foreground="{ThemeResource TipTextColor}"
+                       Text="选择要在排行榜顶部显示的分区，至少保留一个"/>
+            <TextBlock x:Name="CountBlock" HorizontalAlignment="Right" Style="{StaticResource SmallTipTextStyle}"
+                       Foreground="{ThemeResource PrimaryColor}" Text="已选 0 个"/>
+        </Grid>
+        <ScrollViewer Grid.Row="1" MaxHeight="420" VerticalScrollBarVisibility="Auto" HorizontalScrollMode="Disabled">
+            <ItemsControl ItemsSource="{x:Bind Options}">
+                <ItemsControl.ItemsPanel>
+                    <ItemsPanelTemplate>
+                        <ItemsWrapGrid Orientation="Horizontal"/>
+                    </ItemsPanelTemplate>
+                </ItemsControl.ItemsPanel>
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="local:RankRegionOption">
+                        <Grid Width="252" Height="88" Margin="0,0,10,10" Padding="14,12" CornerRadius="10"
+                              Background="{x:Bind TileBackground,Mode=OneWay}"
+                              BorderBrush="{x:Bind TileBorderBrush,Mode=OneWay}" BorderThickness="1"
+                              Tapped="RegionTile_Tapped">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid Width="44" Height="44" VerticalAlignment="Center">
+                                <Ellipse Fill="{ThemeResource CardBackgroundOver}"/>
+                                <Ellipse Fill="{x:Bind LogoBrush}"/>
+                            </Grid>
+                            <TextBlock Grid.Column="1" Margin="12,0" VerticalAlignment="Center"
+                                       Style="{StaticResource BodyTextStyle}" Foreground="{ThemeResource ImportantTextColor}"
+                                       Text="{x:Bind Name}" TextWrapping="Wrap" MaxLines="2"/>
+                            <FontIcon Grid.Column="2" Glyph="&#xE73E;" FontSize="14" VerticalAlignment="Center"
+                                      Foreground="{ThemeResource PrimaryColor}" Visibility="{x:Bind CheckVisibility,Mode=OneWay}"/>
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+        </ScrollViewer>
+    </Grid>
+</ContentDialog>

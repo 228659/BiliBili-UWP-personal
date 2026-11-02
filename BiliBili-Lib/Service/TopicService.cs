@@ -176,7 +176,7 @@ namespace BiliBili_Lib.Service
                 bool hasMore = body.Value<bool?>("has_more") ?? false;
                 string nextOffset = hasMore ? (body.Value<string>("offset") ?? "") : "";
                 BiliTool._logger.Info($"新版动态：本页 {items.Count} 条，转换 {topics.Count} 条，has_more={hasMore}");
-                await BiliTool.WriteNetworkLogAsync($"新版动态：本页 {items.Count} 条，转换 {topics.Count} 条，has_more={hasMore}，next={nextOffset}，耗时 {watch.ElapsedMilliseconds} ms");
+                _ = BiliTool.WriteNetworkLogAsync($"新版动态：本页 {items.Count} 条，转换 {topics.Count} 条，has_more={hasMore}，next={nextOffset}，耗时 {watch.ElapsedMilliseconds} ms");
                 return new Tuple<string, List<Topic>>(nextOffset, topics);
             }
             catch (Exception ex)

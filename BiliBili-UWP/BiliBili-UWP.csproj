@@ -280,6 +280,9 @@
     <Compile Include="Dialogs\ShowImageDialog.xaml.cs">
       <DependentUpon>ShowImageDialog.xaml</DependentUpon>
     </Compile>
+    <Compile Include="Dialogs\RankRegionDialog.xaml.cs">
+      <DependentUpon>RankRegionDialog.xaml</DependentUpon>
+    </Compile>
     <Compile Include="DesktopMainPage.xaml.cs">
       <DependentUpon>DesktopMainPage.xaml</DependentUpon>
     </Compile>
@@ -770,6 +773,10 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
     <Page Include="Dialogs\ShowImageDialog.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
+    <Page Include="Dialogs\RankRegionDialog.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>
     </Page>

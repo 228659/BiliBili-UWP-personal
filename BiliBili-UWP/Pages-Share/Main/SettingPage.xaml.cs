@@ -18,6 +18,7 @@ using Windows.Storage;
 using Windows.System;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
+using Windows.UI.Xaml.Controls.Primitives;
 using Windows.UI.Xaml.Navigation;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=234238
@@ -79,6 +80,9 @@ namespace BiliBili_UWP.Pages_Share.Main
             double rankColumns = Convert.ToDouble(AppTool.GetLocalSetting(Settings.RankColumnCount, "6"));
             RankColumnBox.Value = rankColumns;
             UpdateRankRegionSummary();
+            double acrylicTransparency = Convert.ToDouble(AppTool.GetLocalSetting(Settings.AcrylicTransparency, "15"));
+            AcrylicSlider.Value = acrylicTransparency;
+            AcrylicValueText.Text = $"{(int)Math.Round(acrylicTransparency)}%";
             #endregion
 
             #region 播放器设置
@@ -116,8 +120,11 @@ namespace BiliBili_UWP.Pages_Share.Main
                 case "Cinema":
                     PlayerModeComboBox.SelectedIndex = 1;
                     break;
-                case "Full":
+                case "FillApp":
                     PlayerModeComboBox.SelectedIndex = 2;
+                    break;
+                case "Full":
+                    PlayerModeComboBox.SelectedIndex = 3;
                     break;
             }
             #endregion
@@ -439,47 +446,30 @@ namespace BiliBili_UWP.Pages_Share.Main
             RankRegionSummary.Text = $"当前显示 {ids.Count} 个分区";
         }
 
+        private void AcrylicSlider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
+        {
+            int value = (int)Math.Round(e.NewValue);
+            AcrylicValueText.Text = $"{value}%";
+            if (!_isInit)
+                return;
+            AppTool.WriteLocalSetting(Settings.AcrylicTransparency, value.ToString());
+            UIHelper.ApplyAcrylicTransparency(value / 100.0);
+        }
+
         private async void RankRegionButton_Click(object sender, RoutedEventArgs e)
         {
-            var options = RankPage.GetAvailableRankRegions();
-            var selectedIds = RankPage.GetConfiguredRankRegionIds();
-            var listView = new ListView
+            var dialog = new RankRegionDialog(RankPage.GetAvailableRankRegions(), RankPage.GetConfiguredRankRegionIds());
+            var result = await dialog.ShowAsync();
+            if (result == ContentDialogResult.Primary)
             {
-                SelectionMode = ListViewSelectionMode.Multiple,
-                ItemsSource = options,
-                DisplayMemberPath = "name",
-                MaxHeight = 420,
-                MinWidth = 320
-            };
-            foreach (var option in options.Where(p => selectedIds.Contains(p.tid)))
-                listView.SelectedItems.Add(option);
-            var dialog = new ContentDialog
-            {
-                Title = "排行榜显示分区",
-                Content = listView,
-                PrimaryButtonText = "保存",
-                SecondaryButtonText = "恢复默认",
-                CloseButtonText = "取消",
-                DefaultButton = ContentDialogButton.Primary
-            };
-            dialog.PrimaryButtonClick += (s, args) =>
-            {
-                var ids = options.Where(p => listView.SelectedItems.Contains(p)).Select(p => p.tid).ToList();
-                if (ids.Count == 0)
-                {
-                    args.Cancel = true;
-                    dialog.Title = "至少保留一个分区";
-                    return;
-                }
-                RankPage.SaveConfiguredRankRegionIds(ids);
+                RankPage.SaveConfiguredRankRegionIds(dialog.SelectedIds);
                 UpdateRankRegionSummary();
-            };
-            dialog.SecondaryButtonClick += (s, args) =>
+            }
+            else if (result == ContentDialogResult.Secondary)
             {
                 RankPage.SaveConfiguredRankRegionIds(RankPage.DefaultRankRegionIdList);
                 UpdateRankRegionSummary();
-            };
-            await dialog.ShowAsync();
+            }
         }
     }
 }

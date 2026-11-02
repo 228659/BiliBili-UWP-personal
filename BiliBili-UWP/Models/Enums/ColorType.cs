@@ -29,5 +29,6 @@ namespace BiliBili_UWP.Models.Enums
         TipTextColor,
         MaskAcrylicBackground,
         SideBackground,
+        LineColor,
     }
 }

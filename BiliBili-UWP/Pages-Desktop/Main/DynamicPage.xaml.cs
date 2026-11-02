@@ -101,7 +101,7 @@ namespace BiliBili_UWP.Pages.Main
                 if (DynamicCollection.Count < 10)
                     await LoadDynamic();
                 LoadingRing.IsActive = false;
-                await BiliTool.WriteNetworkLogAsync($"动态首屏耗时：{watch.ElapsedMilliseconds} ms，列表 {DynamicCollection.Count} 条");
+                _ = BiliTool.WriteNetworkLogAsync($"动态首屏耗时：{watch.ElapsedMilliseconds} ms，列表 {DynamicCollection.Count} 条");
             }
             else
             {
@@ -158,11 +158,11 @@ namespace BiliBili_UWP.Pages.Main
                 data.Item2.ForEach(p => TotalList.Add(p));
                 DynamicCollectionInit();
                 BiliTool._logger.Info($"动态页：offset={offset}，本页 {data.Item2.Count} 条，列表 {DynamicCollection.Count} 条");
-                await BiliTool.WriteNetworkLogAsync($"动态请求耗时：{watch.ElapsedMilliseconds} ms，来源 {(_useWebDynamic ? "web" : "legacy")}，本页 {data.Item2.Count} 条");
+                _ = BiliTool.WriteNetworkLogAsync($"动态请求耗时：{watch.ElapsedMilliseconds} ms，来源 {(_useWebDynamic ? "web" : "legacy")}，本页 {data.Item2.Count} 条");
             }
             else
             {
-                await BiliTool.WriteNetworkLogAsync($"动态请求失败或无数据：{watch.ElapsedMilliseconds} ms，来源 {(_useWebDynamic ? "web" : "legacy")}");
+                _ = BiliTool.WriteNetworkLogAsync($"动态请求失败或无数据：{watch.ElapsedMilliseconds} ms，来源 {(_useWebDynamic ? "web" : "legacy")}");
             }
             DynamicLoadingBar.Visibility = Visibility.Collapsed;
             HolderText.Visibility = DynamicCollection.Count == 0 ? Visibility.Visible : Visibility.Collapsed;

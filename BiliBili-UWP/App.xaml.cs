@@ -75,6 +75,7 @@ namespace BiliBili_UWP
                 string theme = AppTool.GetLocalSetting(Settings.Theme, "Light");
                 RequestedTheme = theme == "Light" ? ApplicationTheme.Light : ApplicationTheme.Dark;
             }
+            UIHelper.ApplyAcrylicTransparency(Convert.ToDouble(AppTool.GetLocalSetting(Settings.AcrylicTransparency, "15")) / 100.0);
         }
 
         private void App_LeavingBackground(object sender, LeavingBackgroundEventArgs e)

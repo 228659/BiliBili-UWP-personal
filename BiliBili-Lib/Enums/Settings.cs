@@ -52,6 +52,7 @@ namespace BiliBili_Lib.Enums
         DisableXboxScale,
         IsFirst4K,
         RankRegionIds,
-        RankColumnCount
+        RankColumnCount,
+        AcrylicTransparency
     }
 }

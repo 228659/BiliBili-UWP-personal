@@ -82,6 +82,22 @@
                                 <widgets:AsyncButton Style="{StaticResource DefaultAsyncButtonStyle}" Text="选择分区" x:Name="RankRegionButton"
                                                      Click="RankRegionButton_Click" Icon="&#xE8B3;" Margin="0,10,0,0"/>
                             </StackPanel>
+                            <StackPanel Margin="0,25,0,0">
+                                <ContentPresenter ContentTemplate="{StaticResource TipHeaderStyle}" Content="亚克力通透度"/>
+                                <TextBlock Style="{StaticResource SmallTipTextStyle}" Foreground="{ThemeResource TipTextColor}"
+                                           Margin="0,5,0,0" Text="数值越大，侧栏和内容区越通透；模糊半径由 Windows 固定"/>
+                                <Grid Width="320" HorizontalAlignment="Left" Margin="0,8,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Slider x:Name="AcrylicSlider" Style="{StaticResource BasicSliderStyle}"
+                                            Minimum="0" Maximum="90" StepFrequency="5" ValueChanged="AcrylicSlider_ValueChanged"/>
+                                    <TextBlock x:Name="AcrylicValueText" Grid.Column="1" MinWidth="44" TextAlignment="Right"
+                                               VerticalAlignment="Center" Style="{StaticResource BodyTextStyle}"
+                                               Foreground="{ThemeResource NormalTextColor}" Text="15%"/>
+                                </Grid>
+                            </StackPanel>
                         </StackPanel>
                     </PivotItem>
                     <PivotItem>
@@ -95,8 +111,11 @@
                                   Header="播放器默认显示方式" x:Name="PlayerModeComboBox" SelectionChanged="PlayerModeComboBox_SelectionChanged" Margin="0,15,0,0">
                                 <ComboBoxItem Content="默认" Tag="Default"/>
                                 <ComboBoxItem Content="影院" Tag="Cinema"/>
+                                <ComboBoxItem Content="铺满应用" Tag="FillApp"/>
                                 <ComboBoxItem Content="全屏" Tag="Full"/>
                             </ComboBox>
+                            <TextBlock Style="{StaticResource SmallTipTextStyle}" Foreground="{ThemeResource TipTextColor}"
+                                       Margin="0,5,0,0" Text="铺满应用：播放器铺满应用窗口，画面按比例裁切填满"/>
                             <ToggleSwitch Style="{StaticResource BasicToggleSwitchStyle}" HeaderTemplate="{StaticResource TipHeaderStyle}"
                               Header="优先4K" x:Name="First4KSwitch" Toggled="First4KSwitch_Toggled" Margin="0,15,0,0"/>
                             <ToggleSwitch Style="{StaticResource BasicToggleSwitchStyle}" HeaderTemplate="{StaticResource TipHeaderStyle}"
