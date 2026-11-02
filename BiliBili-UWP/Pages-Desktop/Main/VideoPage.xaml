@@ -135,7 +135,7 @@
         </Flyout>
     </Page.Resources>
     <Grid>
-        <Grid Height="400" HorizontalAlignment="Stretch" Background="{ThemeResource PageBackground}"
+        <Grid Height="400" HorizontalAlignment="Stretch" VerticalAlignment="Top" Background="{ThemeResource PageBackground}"
               x:Name="VideoHolder"/>
         <Grid x:Name="PageContainer" Visibility="Collapsed">
             <Grid.RowDefinitions>
