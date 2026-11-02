@@ -3,9 +3,18 @@
 > 基于 [Richasy/BiliBili-UWP](https://github.com/Richasy/BiliBili-UWP) 的个人自用修改版。上游项目已停止维护并从 Microsoft Store 下架。
 > 本仓库只做兼容性修复，不提供商业服务，与哔哩哔哩官方无关。
 
-当前版本：**1.3.12.0**（2026-11-01） · 支持 **Windows 10 2004 及以上（含 Windows 11）/ x64**
+当前版本：**1.3.13.0**（2026-11-02） · 支持 **Windows 10 2004 及以上（含 Windows 11）/ x64**
 
 ## 这个版本改了什么
+
+### 1.3.13.0（2026-11-02）
+
+- 排行榜分区改为卡片式选择对话框，可在设置中勾选要显示的分区
+- 排行榜每列视频数可配置（3–10），修复数字输入框上下箭头错位
+- 新增亚克力通透度滑杆（0–90%），修复重启后通透度与保存值不一致
+- 播放器新增“铺满应用”显示模式（画面按比例裁切填满应用窗口）
+
+### 1.3.12.0（2026-11-01）
 
 - 仅保留**扫码登录**（TV 二维码），移除密码登录
 - 适配 B 站 64 位 ID（aid / mid / cid / 播放量），修复推荐、排行榜、动态的溢出与解析失败
@@ -23,7 +32,7 @@
 
 ## 安装
 
-1. 在本仓库 [Releases](https://github.com/228659/BiliBili-UWP-personal/releases) 下载 `BiliBili-UWP-1.3.12.0-x64-AppX.zip`
+1. 在本仓库 [Releases](https://github.com/228659/BiliBili-UWP-personal/releases) 下载 `BiliBili-UWP-1.3.13.0-x64-AppX.zip`
 2. 解压到任意目录
 3. 开启 Windows 的“开发人员模式”（设置 → 系统 → 开发者选项）
 4. 右键 `Install.ps1` → 使用 PowerShell 运行，或在 PowerShell 中执行：
