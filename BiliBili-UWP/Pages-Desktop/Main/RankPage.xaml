@@ -46,6 +46,7 @@
                                         IsItemClickEnabled="True"
                                         DesiredWidth="220"
                                         ItemClick="VideoGridView_ItemClick"
+                                        SizeChanged="VideoGridView_SizeChanged"
                                         Style="{StaticResource NoScrollGridView}"
                                         ItemContainerStyle="{StaticResource TransparentGridViewItemContainerStyle}"
                                         StretchContentForSingleRow="False"

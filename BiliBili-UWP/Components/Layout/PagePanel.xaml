@@ -21,7 +21,7 @@
         </SplitView.Pane>
         <SplitView.Content>
             <Grid HorizontalAlignment="Stretch">
-                <Grid Padding="{x:Bind Padding,Mode=OneWay}" x:Name="Container" HorizontalAlignment="Stretch" Background="{ThemeResource PageBackground}">
+                <Grid Padding="{x:Bind Padding,Mode=OneWay}" x:Name="Container" HorizontalAlignment="Stretch" Background="{ThemeResource ContentAcrylicBackground}">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="Auto" />
@@ -52,7 +52,7 @@
                                    NavigationFailed="PageFrame_NavigationFailed"/>
                         </Grid>
                     </ScrollViewer>
-                    <Grid Grid.Row="2" Background="{ThemeResource PageBackground}" x:Name="HolderContainer"
+                    <Grid Grid.Row="2" Background="{ThemeResource ContentAcrylicBackground}" x:Name="HolderContainer"
               HorizontalAlignment="Stretch" VerticalAlignment="Stretch">
                         <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                             <controls1:ImageEx Source="ms-appx:///Assets/bilibili logo.png" Width="100" DecodePixelWidth="100"

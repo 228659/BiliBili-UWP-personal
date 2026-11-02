@@ -1,4 +1,5 @@
-﻿using BiliBili_Lib.Models.BiliBili;
+﻿using BiliBili_Lib.Enums;
+using BiliBili_Lib.Models.BiliBili;
 using BiliBili_Lib.Tools;
 using BiliBili_UWP.Components.Controls;
 using BiliBili_UWP.Models.UI;
@@ -29,6 +30,8 @@ namespace BiliBili_UWP.Pages.Main
     /// </summary>
     public sealed partial class RankPage : Page, IRefreshPage
     {
+        public static readonly int[] DefaultRankRegionIdList = { 0, 1, 3, 129, 4, 36, 188, 160 };
+        public static bool SettingsChanged = false;
         private List<Tuple<int, List<WebVideo>>> RankDetailList = new List<Tuple<int, List<WebVideo>>>();
         private ObservableCollection<WebVideo> DisplayCollection = new ObservableCollection<WebVideo>();
         private ObservableCollection<RegionContainer> RegionCollection = new ObservableCollection<RegionContainer>();
@@ -45,13 +48,15 @@ namespace BiliBili_UWP.Pages.Main
         protected async override void OnNavigatedTo(NavigationEventArgs e)
         {
             App.AppViewModel.CurrentPagePanel.ScrollChanged = ScrollViewerChanged;
-            if (e.NavigationMode == NavigationMode.Back || _isInit)
-                return;
             VideoGridView.EnableAnimation = App.AppViewModel.IsEnableAnimation;
-            VideoGridView.DesiredWidth = 220 + ((App.AppViewModel.BasicFontSize - 14) * 5);
-            await Refresh();
+            UpdateGridLayout();
+            if (!_isInit || SettingsChanged)
+            {
+                SettingsChanged = false;
+                await Refresh();
+                _isInit = true;
+            }
             base.OnNavigatedTo(e);
-            _isInit = true;
         }
         protected override void OnNavigatingFrom(NavigatingCancelEventArgs e)
         {
@@ -64,38 +69,98 @@ namespace BiliBili_UWP.Pages.Main
             double offset = App.AppViewModel.CurrentPagePanel.PageScrollViewer.VerticalOffset;
             _scrollOffset = offset;
         }
+        private void UpdateGridLayout()
+        {
+            int columns;
+            if (!int.TryParse(AppTool.GetLocalSetting(Settings.RankColumnCount, "6"), out columns))
+                columns = 6;
+            columns = Math.Max(3, Math.Min(10, columns));
+            double width = VideoGridView.ActualWidth;
+            if (width <= 0)
+                return;
+            VideoGridView.DesiredWidth = Math.Max(120, width / columns - 0.5);
+        }
+        private void VideoGridView_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            UpdateGridLayout();
+        }
+        public static List<RegionContainer> GetAvailableRankRegions()
+        {
+            var list = new List<RegionContainer>
+            {
+                new RegionContainer()
+                {
+                    tid = 0,
+                    reid = 0,
+                    name = "全区动态",
+                    logo = "ms-appx:///Assets/logo_small.png",
+                    type = 1
+                },
+                new RegionContainer()
+                {
+                    tid = 168,
+                    reid = 0,
+                    name = "国创相关",
+                    logo = "http://i0.hdslb.com/bfs/archive/1586ec926eac1ea876cb74d32df51394d8e72341.png",
+                    type = 1
+                }
+            };
+            foreach (var item in App.BiliViewModel.RegionCollection)
+            {
+                if (item.is_bangumi == 0 && !list.Any(p => p.tid == item.tid))
+                    list.Add(item);
+            }
+            return list;
+        }
+        public static List<int> GetConfiguredRankRegionIds()
+        {
+            string text = AppTool.GetLocalSetting(Settings.RankRegionIds, string.Join(",", DefaultRankRegionIdList));
+            var ids = new List<int>();
+            foreach (var part in text.Split(new[] { ',' }, StringSplitOptions.RemoveEmptyEntries))
+            {
+                int tid;
+                if (int.TryParse(part.Trim(), out tid) && !ids.Contains(tid))
+                    ids.Add(tid);
+            }
+            return ids.Count > 0 ? ids : DefaultRankRegionIdList.ToList();
+        }
+        public static void SaveConfiguredRankRegionIds(IEnumerable<int> ids)
+        {
+            AppTool.WriteLocalSetting(Settings.RankRegionIds, string.Join(",", ids));
+            SettingsChanged = true;
+        }
         private void Reset()
         {
             RankDetailList.Clear();
             RegionCollection.Clear();
-            foreach (var item in App.BiliViewModel.RegionCollection)
+            var available = GetAvailableRankRegions();
+            var configured = GetConfiguredRankRegionIds();
+            foreach (var tid in configured)
             {
-                if (item.is_bangumi == 0)
+                var item = available.FirstOrDefault(p => p.tid == tid);
+                if (item != null && !RegionCollection.Contains(item))
                     RegionCollection.Add(item);
             }
-            var total = new RegionContainer()
+            if (RegionCollection.Count == 0)
             {
-                tid = 0,
-                reid = 0,
-                name = "全区动态",
-                logo = "ms-appx:///Assets/logo_small.png",
-                type = 1
-            };
-            var chinaAnime = new RegionContainer()
-            {
-                tid = 168,
-                reid = 0,
-                name = "国创相关",
-                logo = "http://i0.hdslb.com/bfs/archive/1586ec926eac1ea876cb74d32df51394d8e72341.png",
-                type = 1
-            };
-            RegionCollection.Insert(0, total);
-            RegionCollection.Insert(1, chinaAnime);
+                var fallback = available.First(p => p.tid == 0);
+                RegionCollection.Add(fallback);
+            }
             foreach (var item in RegionCollection)
             {
                 RankDetailList.Add(new Tuple<int, List<WebVideo>>(item.tid, new List<WebVideo>()));
             }
-            RegionListView.SelectedIndex = 0;
+            int index = 0;
+            for (int i = 0; i < RegionCollection.Count; i++)
+            {
+                if (RegionCollection[i].tid == _selectRegion)
+                {
+                    index = i;
+                    break;
+                }
+            }
+            _selectRegion = RegionCollection[index].tid;
+            RegionListView.SelectedIndex = index;
         }
 
         public async Task Refresh()

@@ -50,6 +50,8 @@ namespace BiliBili_Lib.Enums
         BasicFontSize,
         DisplayMode,
         DisableXboxScale,
-        IsFirst4K
+        IsFirst4K,
+        RankRegionIds,
+        RankColumnCount
     }
 }

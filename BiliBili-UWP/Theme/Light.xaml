@@ -4,6 +4,7 @@
     xmlns:local="using:BiliBili_UWP.Theme">
 
     <AcrylicBrush x:Key="SideBackground" BackgroundSource="HostBackdrop" TintColor="White" FallbackColor="#f9fafe" TintOpacity="0.8"/>
+    <AcrylicBrush x:Key="ContentAcrylicBackground" BackgroundSource="HostBackdrop" TintColor="White" FallbackColor="#F1F6FA" TintOpacity="0.85"/>
     <AcrylicBrush x:Key="PaneBackground" BackgroundSource="Backdrop" TintColor="White" FallbackColor="#f9fafe" TintOpacity="0.8"/>
     <AcrylicBrush x:Key="MaskAcrylicBackground" BackgroundSource="Backdrop" TintColor="White" FallbackColor="#f9fafe" TintOpacity="0.4"/>
     <SolidColorBrush x:Key="PopupBackground" Color="#f2f7fd"/>

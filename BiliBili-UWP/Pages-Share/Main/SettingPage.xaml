@@ -69,6 +69,23 @@
                     </PivotItem>
                     <PivotItem>
                         <PivotItem.Header>
+                            <TextBlock Style="{StaticResource CaptionTextStyle}" Text="界面设置"/>
+                        </PivotItem.Header>
+                        <StackPanel Margin="0,15,0,0">
+                            <widgets:NumberBox HeaderTemplate="{StaticResource TipHeaderStyle}" Header="排行榜每列视频数 &#xA;数值越大，单列视频卡片越窄" HorizontalAlignment="Left"
+                                   x:Name="RankColumnBox" Margin="0,15,0,0" ValueChanged="RankColumnBox_ValueChanged"
+                                   Minimum="3" Maximum="10" Step="1" BoxWidth="200"/>
+                            <StackPanel Margin="0,15,0,0">
+                                <ContentPresenter ContentTemplate="{StaticResource TipHeaderStyle}" Content="排行榜显示分区"/>
+                                <TextBlock x:Name="RankRegionSummary" Style="{StaticResource SmallTipTextStyle}"
+                                           Foreground="{ThemeResource TipTextColor}" Margin="0,5,0,0" Text="当前显示 8 个分区"/>
+                                <widgets:AsyncButton Style="{StaticResource DefaultAsyncButtonStyle}" Text="选择分区" x:Name="RankRegionButton"
+                                                     Click="RankRegionButton_Click" Icon="&#xE8B3;" Margin="0,10,0,0"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </PivotItem>
+                    <PivotItem>
+                        <PivotItem.Header>
                             <TextBlock Style="{StaticResource CaptionTextStyle}" Text="播放器设置"/>
                         </PivotItem.Header>
                         <StackPanel Margin="0,15,0,0">

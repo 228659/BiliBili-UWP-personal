@@ -7,6 +7,7 @@ using BiliBili_UWP.Models.UI.Interface;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -90,6 +91,7 @@ namespace BiliBili_UWP.Pages.Main
         }
         public async Task Refresh()
         {
+            var watch = Stopwatch.StartNew();
             _isInit = false;
             Reset();
             if (App.BiliViewModel.IsLogin)
@@ -99,6 +101,7 @@ namespace BiliBili_UWP.Pages.Main
                 if (DynamicCollection.Count < 10)
                     await LoadDynamic();
                 LoadingRing.IsActive = false;
+                await BiliTool.WriteNetworkLogAsync($"动态首屏耗时：{watch.ElapsedMilliseconds} ms，列表 {DynamicCollection.Count} 条");
             }
             else
             {
@@ -115,6 +118,7 @@ namespace BiliBili_UWP.Pages.Main
             if (_useWebDynamic && string.IsNullOrEmpty(offset) && DynamicCollection.Count > 0)
                 return;
             _isDynamicRequesting = true;
+            var watch = Stopwatch.StartNew();
             Tuple<string, List<Topic>> data = null;
             if (!LoadingRing.IsActive)
                 DynamicLoadingBar.Visibility = Visibility.Visible;
@@ -154,6 +158,11 @@ namespace BiliBili_UWP.Pages.Main
                 data.Item2.ForEach(p => TotalList.Add(p));
                 DynamicCollectionInit();
                 BiliTool._logger.Info($"动态页：offset={offset}，本页 {data.Item2.Count} 条，列表 {DynamicCollection.Count} 条");
+                await BiliTool.WriteNetworkLogAsync($"动态请求耗时：{watch.ElapsedMilliseconds} ms，来源 {(_useWebDynamic ? "web" : "legacy")}，本页 {data.Item2.Count} 条");
+            }
+            else
+            {
+                await BiliTool.WriteNetworkLogAsync($"动态请求失败或无数据：{watch.ElapsedMilliseconds} ms，来源 {(_useWebDynamic ? "web" : "legacy")}");
             }
             DynamicLoadingBar.Visibility = Visibility.Collapsed;
             HolderText.Visibility = DynamicCollection.Count == 0 ? Visibility.Visible : Visibility.Collapsed;

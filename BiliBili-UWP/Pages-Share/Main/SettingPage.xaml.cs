@@ -4,6 +4,7 @@ using BiliBili_UWP.Components.Widgets;
 using BiliBili_UWP.Dialogs;
 using BiliBili_UWP.Models.UI;
 using BiliBili_UWP.Models.UI.Others;
+using BiliBili_UWP.Pages.Main;
 using Microsoft.Toolkit.Uwp.Helpers;
 using Richasy.Font.UWP;
 using System;
@@ -72,6 +73,12 @@ namespace BiliBili_UWP.Pages_Share.Main
             DisableScaleInXboxSwitch.IsEnabled = SystemInformation.DeviceFamily == "Windows.Xbox";
             bool disableScale = AppTool.GetBoolSetting(Settings.DisableXboxScale);
             DisableScaleInXboxSwitch.IsOn = disableScale;
+            #endregion
+
+            #region 界面设置
+            double rankColumns = Convert.ToDouble(AppTool.GetLocalSetting(Settings.RankColumnCount, "6"));
+            RankColumnBox.Value = rankColumns;
+            UpdateRankRegionSummary();
             #endregion
 
             #region 播放器设置
@@ -414,6 +421,65 @@ namespace BiliBili_UWP.Pages_Share.Main
             if (!_isInit)
                 return;
             AppTool.WriteLocalSetting(Settings.IsUseHevc, FirstHEVCSwitch.IsOn.ToString());
+        }
+
+        private void RankColumnBox_ValueChanged(object sender, double e)
+        {
+            if (!_isInit)
+                return;
+            int columns = (int)Math.Round(e);
+            columns = Math.Max(3, Math.Min(10, columns));
+            AppTool.WriteLocalSetting(Settings.RankColumnCount, columns.ToString());
+            RankPage.SettingsChanged = true;
+        }
+
+        private void UpdateRankRegionSummary()
+        {
+            var ids = RankPage.GetConfiguredRankRegionIds();
+            RankRegionSummary.Text = $"当前显示 {ids.Count} 个分区";
+        }
+
+        private async void RankRegionButton_Click(object sender, RoutedEventArgs e)
+        {
+            var options = RankPage.GetAvailableRankRegions();
+            var selectedIds = RankPage.GetConfiguredRankRegionIds();
+            var listView = new ListView
+            {
+                SelectionMode = ListViewSelectionMode.Multiple,
+                ItemsSource = options,
+                DisplayMemberPath = "name",
+                MaxHeight = 420,
+                MinWidth = 320
+            };
+            foreach (var option in options.Where(p => selectedIds.Contains(p.tid)))
+                listView.SelectedItems.Add(option);
+            var dialog = new ContentDialog
+            {
+                Title = "排行榜显示分区",
+                Content = listView,
+                PrimaryButtonText = "保存",
+                SecondaryButtonText = "恢复默认",
+                CloseButtonText = "取消",
+                DefaultButton = ContentDialogButton.Primary
+            };
+            dialog.PrimaryButtonClick += (s, args) =>
+            {
+                var ids = options.Where(p => listView.SelectedItems.Contains(p)).Select(p => p.tid).ToList();
+                if (ids.Count == 0)
+                {
+                    args.Cancel = true;
+                    dialog.Title = "至少保留一个分区";
+                    return;
+                }
+                RankPage.SaveConfiguredRankRegionIds(ids);
+                UpdateRankRegionSummary();
+            };
+            dialog.SecondaryButtonClick += (s, args) =>
+            {
+                RankPage.SaveConfiguredRankRegionIds(RankPage.DefaultRankRegionIdList);
+                UpdateRankRegionSummary();
+            };
+            await dialog.ShowAsync();
         }
     }
 }

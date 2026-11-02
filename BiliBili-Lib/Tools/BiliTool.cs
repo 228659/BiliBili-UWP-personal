@@ -350,6 +350,14 @@ namespace BiliBili_Lib.Tools
         }
 
         /// <summary>
+        /// 预取 WBI 密钥，供动态等首屏接口使用
+        /// </summary>
+        public static async Task PrepareWbiKeyAsync()
+        {
+            await GetWbiMixinKeyAsync();
+        }
+
+        /// <summary>
         /// 获取签名
         /// </summary>
         /// <param name="url">网址</param>

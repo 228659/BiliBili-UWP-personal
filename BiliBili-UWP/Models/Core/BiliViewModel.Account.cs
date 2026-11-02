@@ -10,6 +10,7 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -141,6 +142,32 @@ namespace BiliBili_UWP.Models.Core
                 IsLogin = false;
             }
             await CheckUnreadMessage();
+            if (IsLogin)
+                _ = PrepareWebSessionAsync();
+        }
+        /// <summary>
+        /// 预热动态页依赖的 Web 登录态、buvid 与 WBI 密钥
+        /// </summary>
+        /// <returns></returns>
+        public async Task PrepareWebSessionAsync()
+        {
+            if (!IsLogin)
+                return;
+            var watch = Stopwatch.StartNew();
+            try
+            {
+                var tasks = new List<Task>();
+                if (!BiliTool.GetLoginCookieNames().Contains("SESSDATA"))
+                    tasks.Add(_client.Account.SSO());
+                tasks.Add(BiliTool.EnsureBuvidCookieAsync());
+                tasks.Add(BiliTool.PrepareWbiKeyAsync());
+                await Task.WhenAll(tasks);
+                await BiliTool.WriteNetworkLogAsync($"Web 会话预热完成：{watch.ElapsedMilliseconds} ms");
+            }
+            catch (Exception ex)
+            {
+                BiliTool._logger.Warn($"Web 会话预热失败：{ex.Message}");
+            }
         }
         /// <summary>
         /// 检查用户是否登录
