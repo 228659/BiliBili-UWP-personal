@@ -41,6 +41,7 @@ namespace BiliBili_UWP.Components.Widgets
             {
                 var instance = d as NumberBox;
                 instance.InputBox.Text = e.NewValue.ToString();
+                instance.UpdateSpinButtonState();
                 instance.ValueChanged?.Invoke(instance, Convert.ToDouble(e.NewValue));
             }
         }
@@ -108,21 +109,19 @@ namespace BiliBili_UWP.Components.Widgets
 
 
 
+        private void UpdateSpinButtonState()
+        {
+            PopupUpSpinButton.IsEnabled = Value < Maximum;
+            PopupDownSpinButton.IsEnabled = Value > Minimum;
+        }
+
         private void InputBox_GotFocus(object sender, RoutedEventArgs e)
         {
-            PopupUpSpinButton.IsEnabled = true;
-            PopupDownSpinButton.IsEnabled = true;
-            if (Value >= Maximum)
-                PopupUpSpinButton.IsEnabled = false;
-            if (Value <= Minimum)
-                PopupDownSpinButton.IsEnabled = false;
-            if (PopupVisibility == Visibility.Visible)
-                UpDownPopup.IsOpen = true;
+            UpdateSpinButtonState();
         }
 
         private void InputBox_LostFocus(object sender, RoutedEventArgs e)
         {
-            UpDownPopup.IsOpen = false;
             CheckNumber();
         }
 
@@ -156,28 +155,12 @@ namespace BiliBili_UWP.Components.Widgets
 
         private void PopupUpSpinButton_Click(object sender, RoutedEventArgs e)
         {
-            double num = Value + Math.Round(Step,1);
-            if (num > Minimum)
-                PopupDownSpinButton.IsEnabled = true;
-            if (num >= Maximum)
-            {
-                num = Maximum;
-                PopupUpSpinButton.IsEnabled = false;
-            }
-            Value = num;
+            Value = Math.Min(Maximum, Value + Math.Round(Step, 1));
         }
 
         private void PopupDownSpinButton_Click(object sender, RoutedEventArgs e)
         {
-            double num = Value - Math.Round(Step, 1);
-            if (num < Maximum)
-                PopupUpSpinButton.IsEnabled = true;
-            if (num <= Minimum)
-            {
-                num = Minimum;
-                PopupDownSpinButton.IsEnabled = false;
-            }
-            Value = num;
+            Value = Math.Max(Minimum, Value - Math.Round(Step, 1));
         }
 
 

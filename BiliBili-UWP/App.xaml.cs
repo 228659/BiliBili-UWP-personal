@@ -75,7 +75,14 @@ namespace BiliBili_UWP
                 string theme = AppTool.GetLocalSetting(Settings.Theme, "Light");
                 RequestedTheme = theme == "Light" ? ApplicationTheme.Light : ApplicationTheme.Dark;
             }
-            UIHelper.ApplyAcrylicTransparency(Convert.ToDouble(AppTool.GetLocalSetting(Settings.AcrylicTransparency, "15")) / 100.0);
+            ApplySavedAcrylicTransparency("启动");
+        }
+
+        private static void ApplySavedAcrylicTransparency(string stage)
+        {
+            double transparency = Convert.ToDouble(AppTool.GetLocalSetting(Settings.AcrylicTransparency, "15"));
+            int count = UIHelper.ApplyAcrylicTransparency(transparency / 100.0);
+            WriteStartupLog($"亚克力{stage}应用 {transparency}% -> {count} 个画刷");
         }
 
         private void App_LeavingBackground(object sender, LeavingBackgroundEventArgs e)
@@ -197,6 +204,12 @@ namespace BiliBili_UWP
                 WriteStartupLog("激活窗口");
                 Window.Current.Activate();
                 UIHelper.SetTitleBarColor();
+                ApplySavedAcrylicTransparency("激活后");
+                if (rootFrame != null)
+                {
+                    rootFrame.Loaded -= RootFrame_Loaded;
+                    rootFrame.Loaded += RootFrame_Loaded;
+                }
                 WriteStartupLog("窗口已激活");
                 bool isDisableScale = AppTool.GetBoolSetting(Settings.DisableXboxScale);
                 if (SystemInformation.DeviceFamily == "Windows.Xbox")
@@ -212,6 +225,12 @@ namespace BiliBili_UWP
                 WriteStartupLog("启动出错: " + ex);
                 _logger.Error("启动出错", ex);
             }
+        }
+        private void RootFrame_Loaded(object sender, RoutedEventArgs e)
+        {
+            if (sender is Frame frame)
+                frame.Loaded -= RootFrame_Loaded;
+            ApplySavedAcrylicTransparency("界面加载后");
         }
         protected override void OnBackgroundActivated(BackgroundActivatedEventArgs args)
         {

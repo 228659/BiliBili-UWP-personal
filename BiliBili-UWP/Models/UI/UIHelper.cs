@@ -85,24 +85,48 @@ namespace BiliBili_UWP.Models.UI
         /// <summary>
         /// 调整亚克力通透度，数值越大背景越通透（模糊半径由系统固定）
         /// </summary>
-        public static void ApplyAcrylicTransparency(double transparency)
+        public static int ApplyAcrylicTransparency(double transparency)
         {
             transparency = Math.Max(0, Math.Min(1, transparency));
             double contentOpacity = Math.Max(0.1, 1 - transparency);
             double sideOpacity = Math.Max(0.1, contentOpacity - 0.1);
-            SetAcrylicTintOpacity("ContentAcrylicBackground", contentOpacity);
-            SetAcrylicTintOpacity("SideBackground", sideOpacity);
+            int count = 0;
+            count += SetAcrylicTintOpacity("ContentAcrylicBackground", contentOpacity);
+            count += SetAcrylicTintOpacity("SideBackground", sideOpacity);
+            return count;
         }
-        private static void SetAcrylicTintOpacity(string key, double opacity)
+        private static int SetAcrylicTintOpacity(string key, double opacity)
         {
+            int count = 0;
             try
             {
-                if (Application.Current.Resources[key] is AcrylicBrush brush)
-                    brush.TintOpacity = opacity;
+                var resources = Application.Current.Resources as IDictionary<object, object>;
+                if (resources != null && resources.ContainsKey(key) && resources[key] is AcrylicBrush direct)
+                {
+                    direct.TintOpacity = opacity;
+                    count++;
+                }
             }
             catch
             {
             }
+            try
+            {
+                var themes = Application.Current.Resources.ThemeDictionaries;
+                foreach (var themeKey in new object[] { "Light", "Dark" })
+                {
+                    if (themes.ContainsKey(themeKey) && themes[themeKey] is IDictionary<object, object> theme
+                        && theme.ContainsKey(key) && theme[key] is AcrylicBrush brush)
+                    {
+                        brush.TintOpacity = opacity;
+                        count++;
+                    }
+                }
+            }
+            catch
+            {
+            }
+            return count;
         }
         /// <summary>
         /// 获取预先定义的字体资源
