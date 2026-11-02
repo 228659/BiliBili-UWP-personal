@@ -72,7 +72,7 @@
                             <TextBlock Style="{StaticResource CaptionTextStyle}" Text="界面设置"/>
                         </PivotItem.Header>
                         <StackPanel Margin="0,15,0,0">
-                            <widgets:NumberBox HeaderTemplate="{StaticResource TipHeaderStyle}" Header="排行榜每列视频数 &#xA;数值越大，单列视频卡片越窄" HorizontalAlignment="Left"
+                            <widgets:NumberBox HeaderTemplate="{StaticResource TipHeaderStyle}" Header="每列视频数 &#xA;首页、推荐、历史、收藏等页面通用 &#xA;数值越大，卡片越窄" HorizontalAlignment="Left"
                                    x:Name="RankColumnBox" Margin="0,15,0,0" ValueChanged="RankColumnBox_ValueChanged"
                                    Minimum="3" Maximum="10" Step="1" BoxWidth="200"/>
                             <StackPanel Margin="0,15,0,0">

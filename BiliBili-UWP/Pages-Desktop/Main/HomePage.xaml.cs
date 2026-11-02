@@ -45,7 +45,7 @@ namespace BiliBili_UWP.Pages.Main
             App.AppViewModel.CurrentPagePanel.ScrollToBottom = ScrollViewerBottomHandle;
             App.AppViewModel.CurrentPagePanel.ScrollChanged = ScrollViewerChanged;
             RecommendVideoView.EnableAnimation = App.AppViewModel.IsEnableAnimation;
-            RecommendVideoView.DesiredWidth = 220 + ((App.AppViewModel.BasicFontSize - 14) * 5);
+            UpdateVideoGridLayout();
             if (_isInit || e.NavigationMode == NavigationMode.Back)
             {
                 return;
@@ -59,6 +59,16 @@ namespace BiliBili_UWP.Pages.Main
             App.AppViewModel.CurrentPagePanel.ScrollToBottom = null;
             App.AppViewModel.CurrentPagePanel.ScrollChanged = null;
             base.OnNavigatingFrom(e);
+        }
+        private void UpdateVideoGridLayout()
+        {
+            double width = UIHelper.GetVideoItemWidth(RecommendVideoView.ActualWidth);
+            if (width > 0)
+                RecommendVideoView.DesiredWidth = width;
+        }
+        private void RecommendVideoView_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            UpdateVideoGridLayout();
         }
         public async Task Refresh()
         {

@@ -5,6 +5,7 @@ using BiliBili_UWP.Components.Controls;
 using BiliBili_UWP.Components.Widgets;
 using BiliBili_UWP.Dialogs;
 using BiliBili_UWP.Models.Core;
+using BiliBili_UWP.Models.UI;
 using BiliBili_UWP.Models.UI.Interface;
 using System;
 using System.Collections.Generic;
@@ -51,7 +52,7 @@ namespace BiliBili_UWP.Pages.Main
             HistoryVideoView.EnableAnimation = App.AppViewModel.IsEnableAnimation;
             App.AppViewModel.CurrentPagePanel.ScrollToBottom = ScrollViewerBottomHandle;
             App.AppViewModel.CurrentPagePanel.ScrollChanged = ScrollViewerChanged;
-            HistoryVideoView.DesiredWidth = 215 + ((App.AppViewModel.BasicFontSize - 14) * 5);
+            UpdateVideoGridLayout();
             if (_isInit || e.NavigationMode == NavigationMode.Back)
             {
                 return;
@@ -65,6 +66,16 @@ namespace BiliBili_UWP.Pages.Main
             App.AppViewModel.CurrentPagePanel.ScrollToBottom = null;
             App.AppViewModel.CurrentPagePanel.ScrollChanged = null;
             base.OnNavigatingFrom(e);
+        }
+        private void UpdateVideoGridLayout()
+        {
+            double width = UIHelper.GetVideoItemWidth(HistoryVideoView.ActualWidth);
+            if (width > 0)
+                HistoryVideoView.DesiredWidth = width;
+        }
+        private void HistoryVideoView_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            UpdateVideoGridLayout();
         }
         public async Task Refresh()
         {

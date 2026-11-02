@@ -71,14 +71,9 @@ namespace BiliBili_UWP.Pages.Main
         }
         private void UpdateGridLayout()
         {
-            int columns;
-            if (!int.TryParse(AppTool.GetLocalSetting(Settings.RankColumnCount, "6"), out columns))
-                columns = 6;
-            columns = Math.Max(3, Math.Min(10, columns));
-            double width = VideoGridView.ActualWidth;
-            if (width <= 0)
-                return;
-            VideoGridView.DesiredWidth = Math.Max(120, width / columns - 0.5);
+            double width = UIHelper.GetVideoItemWidth(VideoGridView.ActualWidth);
+            if (width > 0)
+                VideoGridView.DesiredWidth = width;
         }
         private void VideoGridView_SizeChanged(object sender, SizeChangedEventArgs e)
         {

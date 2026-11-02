@@ -146,6 +146,25 @@ namespace BiliBili_UWP.Models.UI
         {
             return (Style)Application.Current.Resources[key];
         }
+        /// <summary>
+        /// 视频列表每列卡片数量，首页、推荐、历史记录、收藏等视频列表通用
+        /// </summary>
+        public static int GetVideoColumnCount()
+        {
+            int columns;
+            if (!int.TryParse(AppTool.GetLocalSetting(Settings.RankColumnCount, "6"), out columns))
+                columns = 6;
+            return Math.Max(3, Math.Min(10, columns));
+        }
+        /// <summary>
+        /// 按每列视频数计算 AdaptiveGridView 的卡片宽度
+        /// </summary>
+        public static double GetVideoItemWidth(double containerWidth)
+        {
+            if (containerWidth <= 0)
+                return 0;
+            return Math.Max(120, containerWidth / GetVideoColumnCount() - 0.5);
+        }
         public static void PopupInit(IAppPopup popup)
         {
             popup._popup = new Popup();

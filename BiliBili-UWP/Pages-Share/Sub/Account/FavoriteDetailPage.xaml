@@ -6,17 +6,17 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:controls="using:BiliBili_UWP.Components.Controls"
+    xmlns:ada="using:BiliBili_Controls.AdaptiveGridView"
     xmlns:favorites="using:BiliBili_Lib.Models.BiliBili.Favorites" xmlns:muxc="using:Microsoft.UI.Xaml.Controls"
     mc:Ignorable="d">
     <Page.Resources>
         <DataTemplate x:DataType="favorites:FavoriteVideo" x:Key="VideoItemTemplate">
-            <controls:DefaultVideoPanel Cover="{x:Bind cover}"
-                                        Title="{x:Bind title}" UserName="{x:Bind upper.name}" 
+            <controls:DefaultVideoCard Cover="{x:Bind cover}"
+                                        Title="{x:Bind title}" Tip="{x:Bind upper.name}"
                                         FirstSectionContent="{x:Bind cnt_info.play,Converter={StaticResource NumberAbbrConverter}}"
                                         SecondSectionContent="{x:Bind cnt_info.danmaku,Converter={StaticResource NumberAbbrConverter}}"
-                                        Margin="0,0,0,10" ExtraButtonVisibility="Visible"
-                                        >
-                <controls:DefaultVideoPanel.ExtraFlyout>
+                                        Margin="3">
+                <controls:DefaultVideoCard.ExtraFlyout>
                     <CommandBarFlyout>
                         <CommandBarFlyout.SecondaryCommands>
                             <AppBarButton Label="移出收藏夹" Tag="{x:Bind}" FontSize="{CustomResource SmallFontSize}" FontFamily="{CustomResource Basic}" x:Name="RemoveButton" Click="RemoveButton_Click">
@@ -26,17 +26,19 @@
                             </AppBarButton>
                         </CommandBarFlyout.SecondaryCommands>
                     </CommandBarFlyout>
-                </controls:DefaultVideoPanel.ExtraFlyout>
-            </controls:DefaultVideoPanel>
+                </controls:DefaultVideoCard.ExtraFlyout>
+            </controls:DefaultVideoCard>
         </DataTemplate>
     </Page.Resources>
     <Grid>
         <ScrollViewer Style="{StaticResource BasicScrollViewer}" ViewChanged="ScrollViewer_ViewChanged">
             <Grid>
-                <ListView x:Name="FavoriteListView" ItemsSource="{x:Bind VideoCollection}"
+                <ada:AdaptiveGridView x:Name="FavoriteVideoView" ItemsSource="{x:Bind VideoCollection}"
                   IsItemClickEnabled="True" ItemClick="FavoriteListView_ItemClick"
-                  ItemContainerStyle="{StaticResource TransparentListViewContainerStyle}"
-                  Style="{StaticResource NoScrollListView}" ItemTemplate="{StaticResource VideoItemTemplate}"
+                  DesiredWidth="215" SizeChanged="FavoriteVideoView_SizeChanged"
+                  SelectionMode="None"
+                  ItemContainerStyle="{StaticResource TransparentGridViewItemContainerStyle}"
+                  Style="{StaticResource NoScrollGridView}" ItemTemplate="{StaticResource VideoItemTemplate}"
                           ContainerContentChanging="FavoriteListView_ContainerContentChanging"/>
                 <muxc:ProgressBar Style="{StaticResource MuxcProgressBarStyle}"
                              VerticalAlignment="Bottom" x:Name="LoadingBar" Visibility="Collapsed"/>

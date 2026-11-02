@@ -52,6 +52,7 @@
         <Grid Grid.Row="1">
             <ada:AdaptiveGridView x:Name="HistoryVideoView"
                           DesiredWidth="215"
+                          SizeChanged="HistoryVideoView_SizeChanged"
                           StretchContentForSingleRow="False"
                           ItemTemplate="{StaticResource VideoItemTemplate}"
                           ItemContainerStyle="{StaticResource TransparentGridViewItemContainerStyle}"

@@ -4,6 +4,7 @@ using BiliBili_Lib.Tools;
 using BiliBili_UWP.Components.Controls;
 using BiliBili_UWP.Components.Widgets;
 using BiliBili_UWP.Models.Core;
+using BiliBili_UWP.Models.UI;
 using BiliBili_UWP.Models.UI.Interface;
 using System;
 using System.Collections.Generic;
@@ -51,7 +52,7 @@ namespace BiliBili_UWP.Pages.Main
         {
             App.AppViewModel.CurrentPagePanel.ScrollToBottom = ScrollViewerBottomHandle;
             App.AppViewModel.CurrentPagePanel.ScrollChanged = ScrollViewerChanged;
-            RecommendVideoView.DesiredWidth = 220 + ((App.AppViewModel.BasicFontSize - 14) * 5);
+            UpdateVideoGridLayout();
             if (e.NavigationMode == NavigationMode.Back)
                 return;
             if (e.Parameter != null && e.Parameter is RegionContainer _con)
@@ -71,6 +72,16 @@ namespace BiliBili_UWP.Pages.Main
             App.AppViewModel.CurrentPagePanel.ScrollToBottom = null;
             App.AppViewModel.CurrentPagePanel.ScrollChanged = null;
             base.OnNavigatingFrom(e);
+        }
+        private void UpdateVideoGridLayout()
+        {
+            double width = UIHelper.GetVideoItemWidth(RecommendVideoView.ActualWidth);
+            if (width > 0)
+                RecommendVideoView.DesiredWidth = width;
+        }
+        private void RecommendVideoView_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            UpdateVideoGridLayout();
         }
         private void Reset()
         {

@@ -51,6 +51,7 @@
         </Grid>
         <Grid Grid.Row="1">
             <ada:AdaptiveGridView x:Name="ViewLaterVideoView"
+                                  SizeChanged="ViewLaterVideoView_SizeChanged"
                                   HorizontalAlignment="Stretch"
                                   VerticalAlignment="Stretch"
                                   DesiredWidth="215"

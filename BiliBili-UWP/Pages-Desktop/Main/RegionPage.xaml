@@ -89,6 +89,7 @@
                 <controls1:AdaptiveGridView x:Name="RecommendVideoView"
                           ItemTemplate="{StaticResource VideoItemTemplate}"
                           DesiredWidth="215"
+                          SizeChanged="RecommendVideoView_SizeChanged"
                           ItemContainerStyle="{StaticResource TransparentGridViewItemContainerStyle}"
                           Style="{StaticResource NoScrollGridView}"
                           SelectionMode="None" IsItemClickEnabled="True"

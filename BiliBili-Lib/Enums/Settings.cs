@@ -52,7 +52,7 @@ namespace BiliBili_Lib.Enums
         DisableXboxScale,
         IsFirst4K,
         RankRegionIds,
-        RankColumnCount,
+        RankColumnCount, // 键名沿用旧值以保留已保存设置，现为所有视频列表的每列数量
         AcrylicTransparency
     }
 }

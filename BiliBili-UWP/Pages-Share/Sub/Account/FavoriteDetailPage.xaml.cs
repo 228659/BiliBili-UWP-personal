@@ -4,6 +4,7 @@ using BiliBili_Lib.Models.BiliBili.Video;
 using BiliBili_Lib.Service;
 using BiliBili_UWP.Components.Controls;
 using BiliBili_UWP.Components.Widgets;
+using BiliBili_UWP.Models.UI;
 using BiliBili_UWP.Models.UI.Interface;
 using System;
 using System.Collections.Generic;
@@ -45,6 +46,7 @@ namespace BiliBili_UWP.Pages_Share.Sub.Account
 
         protected async override void OnNavigatedTo(NavigationEventArgs e)
         {
+            UpdateVideoGridLayout();
             if (e.NavigationMode == NavigationMode.Back)
                 return;
             if (e.Parameter != null && e.Parameter is FavoriteItem item)
@@ -134,8 +136,20 @@ namespace BiliBili_UWP.Pages_Share.Sub.Account
         private void FavoriteListView_ContainerContentChanging(ListViewBase sender, ContainerContentChangingEventArgs args)
         {
             args.Handled = true;
-            DefaultVideoPanel card = (DefaultVideoPanel)args.ItemContainer.ContentTemplateRoot;
+            DefaultVideoCard card = (DefaultVideoCard)args.ItemContainer.ContentTemplateRoot;
             card.RenderContainer(args);
+        }
+
+        private void UpdateVideoGridLayout()
+        {
+            double width = UIHelper.GetVideoItemWidth(FavoriteVideoView.ActualWidth);
+            if (width > 0)
+                FavoriteVideoView.DesiredWidth = width;
+        }
+
+        private void FavoriteVideoView_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            UpdateVideoGridLayout();
         }
     }
 }

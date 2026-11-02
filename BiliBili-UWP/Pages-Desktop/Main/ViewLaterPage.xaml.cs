@@ -5,6 +5,7 @@ using BiliBili_UWP.Components.Controls;
 using BiliBili_UWP.Components.Widgets;
 using BiliBili_UWP.Dialogs;
 using BiliBili_UWP.Models.Core;
+using BiliBili_UWP.Models.UI;
 using BiliBili_UWP.Models.UI.Interface;
 using System;
 using System.Collections.ObjectModel;
@@ -41,7 +42,7 @@ namespace BiliBili_UWP.Pages.Main
             ViewLaterVideoView.EnableAnimation = App.AppViewModel.IsEnableAnimation;
             App.AppViewModel.CurrentPagePanel.ScrollToBottom = ScrollViewerBottomHandle;
             App.AppViewModel.CurrentPagePanel.ScrollChanged = ScrollViewerChanged;
-            ViewLaterVideoView.DesiredWidth = 215 + ((App.AppViewModel.BasicFontSize - 14) * 5);
+            UpdateVideoGridLayout();
             if (_isInit || e.NavigationMode == NavigationMode.Back)
             {
                 return;
@@ -53,6 +54,16 @@ namespace BiliBili_UWP.Pages.Main
         {
             App.AppViewModel.CurrentPagePanel.ScrollToBottom = null;
             base.OnNavigatingFrom(e);
+        }
+        private void UpdateVideoGridLayout()
+        {
+            double width = UIHelper.GetVideoItemWidth(ViewLaterVideoView.ActualWidth);
+            if (width > 0)
+                ViewLaterVideoView.DesiredWidth = width;
+        }
+        private void ViewLaterVideoView_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            UpdateVideoGridLayout();
         }
         public async Task Refresh()
         {

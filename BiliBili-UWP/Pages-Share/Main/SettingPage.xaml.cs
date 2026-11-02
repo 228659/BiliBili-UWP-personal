@@ -77,8 +77,8 @@ namespace BiliBili_UWP.Pages_Share.Main
             #endregion
 
             #region 界面设置
-            double rankColumns = Convert.ToDouble(AppTool.GetLocalSetting(Settings.RankColumnCount, "6"));
-            RankColumnBox.Value = rankColumns;
+            double columns = Convert.ToDouble(AppTool.GetLocalSetting(Settings.RankColumnCount, "6"));
+            RankColumnBox.Value = columns;
             UpdateRankRegionSummary();
             double acrylicTransparency = Convert.ToDouble(AppTool.GetLocalSetting(Settings.AcrylicTransparency, "15"));
             AcrylicSlider.Value = acrylicTransparency;
